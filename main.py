@@ -4,6 +4,35 @@ from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
 from combine_audio_video import combine_audio_video
 from moviepy.editor import AudioFileClip, concatenate_videoclips
+import google.generativeai as genai
+
+# Gemini API の設定
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+model = genai.GenerativeModel(
+    model_name="gemini-1.5-flash",
+)
+
+def generate_dialogue() -> List[Tuple[int, str]]:
+    chat_session = model.start_chat(history=[])
+
+    prompt = """
+    2人のキャラクターによる短い対話を生成してください。各発言は100文字以内で、合計4つの発言にしてください。
+    対話の形式は以下のようにしてください：
+    0: [キャラクター1の発言]
+    1: [キャラクター2の発言]
+    0: [キャラクター1の発言]
+    1: [キャラクター2の発言]
+    """
+
+    response = chat_session.send_message(prompt)
+
+    dialogue = []
+    for line in response.text.strip().split('\n'):
+        speaker, text = line.split(':', 1)
+        dialogue.append((int(speaker), text.strip()))
+
+    return dialogue
 
 def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> List[str]:
     audio_files = []
@@ -32,15 +61,14 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     final_clip.write_videofile(output_file)
 
 def main():
-    dialogue = [
-        (0, "こんにちは、私は1人目のキャラクターです。"),
-        (1, "こんにちは、私は2人目のキャラクターです。"),
-        (0, "今日はいい天気ですね。"),
-        (1, "そうですね。散歩でもいきましょうか？"),
-    ]
-
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
+
+    # Gemini APIを使用して対話を生成
+    dialogue = generate_dialogue()
+    print("生成された対話:")
+    for speaker, text in dialogue:
+        print(f"キャラクター{speaker + 1}: {text}")
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
     video_files = create_dialogue_video(dialogue, audio_files, output_dir)
