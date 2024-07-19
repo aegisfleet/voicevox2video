@@ -39,4 +39,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: final-video
-        path: final_output.mp4
+        path: final_dialogue_output.mp4
