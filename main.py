@@ -67,8 +67,8 @@ def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str
     for i, ((speaker, text), audio_file) in enumerate(zip(dialogue, audio_files)):
         audio_duration = AudioFileClip(audio_file).duration
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
-        create_video_with_subtitles(text, duration=audio_duration, output_file=video_file, 
-                                    position='bottom' if speaker == 0 else 'top',
+        character = "四国めたん" if speaker == 0 else "ずんだもん"
+        create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
                                     font_path=None)
         video_files.append(video_file)
     return video_files
