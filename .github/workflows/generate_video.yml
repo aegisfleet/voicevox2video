@@ -1,0 +1,69 @@
+name: Generate Video with VOICEVOX
+
+on:
+  workflow_dispatch 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install Japanese fonts
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y fonts-noto-cjk
+
+    - name: Install ffmpeg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+
+    - name: Install VOICEVOX
+      id: install_voicevox
+      run: |
+        docker pull voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+        # ランナーのIPアドレスを環境変数に設定
+        RUNNER_IP=$(hostname -i)
+        echo "VOICEVOX_API_HOST=$RUNNER_IP" >> $GITHUB_OUTPUT
+        docker run --rm -it -p "${RUNNER_IP}:50021:50021" voicevox/voicevox_engine:cpu-ubuntu20.04-latest &
+
+    - name: Wait for VOICEVOX to start
+      run: |
+        # VOICEVOXのサーバが起動するまで待つ
+        echo "Waiting for VOICEVOX to start..."
+        for i in {1..60}; do
+          if nc -z ${{ steps.install_voicevox.outputs.VOICEVOX_API_HOST }} 50021; then
+            echo "VOICEVOX is ready!"
+            break
+          fi
+          sleep 1
+        done
+        if ! nc -z ${{ steps.install_voicevox.outputs.VOICEVOX_API_HOST }} 50021; then
+          echo "Error: VOICEVOX failed to start" >&2
+          exit 1
+        fi
+
+    - name: Run main script
+      run: python main.py
+      env:
+        # メインスクリプト内でVOICEVOXのAPIにアクセスする際は、
+        # 環境変数から値を取得する
+        VOICEVOX_API_HOST: ${{ steps.install_voicevox.outputs.VOICEVOX_API_HOST }}
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: final-video
+        path: final_output.mp4
