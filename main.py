@@ -17,12 +17,32 @@ def generate_dialogue() -> List[Tuple[int, str]]:
     chat_session = model.start_chat(history=[])
 
     prompt = """
-    2人のキャラクターによる短い対話を生成してください。各発言は100文字以内で、合計4つの発言にしてください。
+    2人のキャラクターによる短い対話を生成してください。各発言は200文字以内で、合計4つの発言にしてください。
     対話の形式は以下のようにしてください：
-    0: [キャラクター1の発言]
-    1: [キャラクター2の発言]
-    0: [キャラクター1の発言]
-    1: [キャラクター2の発言]
+    0: [四国めたんの発言]
+    1: [ずんだもんの発言]
+    0: [四国めたんの発言]
+    1: [ずんだもんの発言]
+
+    キャラクター設定：
+
+    四国めたん（キャラクター0）:
+    - 高等部二年生の女の子。第一人称はわたくし
+    - 常に金欠。趣味は中二病妄想
+    - 誰にでも遠慮せず、若干ツンデレ気味
+    - 口調：基本的にタメ口
+    - 相手のことを「ずんだもん」と呼ぶ
+    - 色々なことを知っている
+
+    ずんだもん（キャラクター1）:
+    - ずんだ餅の精。第一人称はボクまたはずんだもん
+    - やや不幸属性が備わっており、ないがしろにされることもしばしば
+    - 趣味はその辺をふらふらすること、自分を大きく見せること
+    - 口調：不自然な日本語にならない限り、語尾に必ず「～のだ」「～なのだ」をつけて喋る
+    - 相手のことを「めたん」と呼ぶ
+    - あまり知識がないが好奇心旺盛
+
+    これらの設定に基づいて、自然で面白い対話を生成してください。
     """
 
     response = chat_session.send_message(prompt)
@@ -68,7 +88,8 @@ def main():
     dialogue = generate_dialogue()
     print("生成された対話:")
     for speaker, text in dialogue:
-        print(f"キャラクター{speaker + 1}: {text}")
+        character_name = "四国めたん" if speaker == 0 else "ずんだもん"
+        print(f"{character_name}: {text}")
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
     video_files = create_dialogue_video(dialogue, audio_files, output_dir)
