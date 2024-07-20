@@ -5,10 +5,11 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
-from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip
+from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip, ColorClip
 import google.generativeai as genai
 import wave
 import numpy as np
+from scipy import signal    # pyright: ignore[reportMissingImports]
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -108,7 +109,7 @@ def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> L
             params = wf.getparams()
             data = wf.readframes(wf.getnframes())
 
-        data = remove_noise(data, params.framerate)
+        data = remove_noise(data, params.framerate, cutoff=100, fade_duration_ms=10, limit_threshold=0.8)
 
         with wave.open(audio_file, 'wb') as wf:
             wf.setparams(params)
@@ -117,10 +118,32 @@ def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> L
         audio_files.append(audio_file)
     return audio_files
 
-def remove_noise(audio_data, sample_rate, threshold=0.02):
+def limit_audio(audio_array, threshold=0.8):
+    max_val = np.max(np.abs(audio_array))
+    if max_val > threshold:
+        audio_array = audio_array / max_val * threshold
+    return audio_array
+
+def remove_noise(audio_data, sample_rate, cutoff=100, threshold=0.01, fade_duration_ms=10, limit_threshold=0.8):
     audio_array = np.frombuffer(audio_data, dtype=np.int16) / 32768.0
-    audio_array = np.where(np.abs(audio_array) > threshold, audio_array, 0)
-    audio_array = (audio_array * 32768.0).astype(np.int16)
+
+    nyquist = 0.5 * sample_rate
+    normal_cutoff = cutoff / nyquist
+    b, a = signal.butter(4, normal_cutoff, btype='high', analog=False)
+    audio_array = signal.filtfilt(b, a, audio_array)
+
+    audio_array = np.where(np.abs(audio_array) > threshold, audio_array, audio_array * 0.1)
+
+    fade_duration = int(fade_duration_ms * sample_rate / 1000)
+    fade_in = np.linspace(0, 1, fade_duration)
+    fade_out = np.linspace(1, 0, fade_duration)
+    audio_array[:fade_duration] *= fade_in
+    audio_array[-fade_duration:] *= fade_out
+
+    audio_array = limit_audio(audio_array, threshold=limit_threshold)
+
+    audio_array = np.clip(audio_array, -1, 1)
+    audio_array = (audio_array * 32767.0).astype(np.int16)
     return audio_array.tobytes()
 
 def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str) -> List[str]:
@@ -139,21 +162,37 @@ def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str
 def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str):
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) 
              for video, audio in zip(video_files, audio_files)]
-    final_clip = concatenate_videoclips(clips)
 
-    bgm = AudioFileClip(bgm_file).volumex(0.15) # pyright: ignore[reportAttributeAccessIssue]
+    crossfaded_clips = []
+    crossfade_duration = 0.1
+    blank_duration = 1
 
+    blank_clip = ColorClip(size=(1280, 720), color=(0, 0, 0)).set_duration(blank_duration)
+
+    for i, clip in enumerate(clips):
+        if i > 0:
+            clip = clip.crossfadein(crossfade_duration)
+        if i < len(clips) - 1:
+            clip = clip.crossfadeout(crossfade_duration)
+
+        clip = clip.audio_fadein(crossfade_duration).audio_fadeout(crossfade_duration)
+
+        crossfaded_clips.append(clip)
+
+    final_clip = concatenate_videoclips([blank_clip] + crossfaded_clips + [blank_clip], method="compose")
+
+    bgm = AudioFileClip(bgm_file).volumex(0.1)  # pyright: ignore[reportAttributeAccessIssue]
     if bgm.duration < final_clip.duration:
         bgm = bgm.audio_loop(duration=final_clip.duration)
     else:
         bgm = bgm.subclip(0, final_clip.duration)
 
-    bgm = bgm.audio_fadein(0).audio_fadeout(3)
+    bgm = bgm.audio_fadein(1).audio_fadeout(3)
 
     final_audio = CompositeAudioClip([final_clip.audio, bgm])
     final_clip = final_clip.set_audio(final_audio)
-
-    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac")
+    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", 
+                               bitrate="5000k", audio_bitrate="192k")
 
 def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
     dialogue = []

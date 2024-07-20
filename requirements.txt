@@ -4,3 +4,4 @@ Pillow
 numpy
 google-generativeai
 beautifulsoup4
+scipy
