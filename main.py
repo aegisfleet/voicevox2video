@@ -30,7 +30,7 @@ def scrape_website(url: str) -> str:
     return text
 
 def generate_dialogue(content: str) -> List[Tuple[int, str]]:
-    for retry in range(3):  # 最大3回リトライ
+    for retry in range(3):
         try:
             chat_session = model.start_chat(history=[])
             print(content[:5000])
