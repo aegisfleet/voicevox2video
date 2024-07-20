@@ -8,7 +8,7 @@
 - テキストファイルからの対話読み込み
 - Google Gemini AIを使用した対話生成
 - VOICEVOXによる音声合成
-- 字幕付き動画の生成
+- 字幕付き動画の生成（横動画・縦動画に対応）
 
 ## セットアップ
 
@@ -58,22 +58,24 @@
 
 ## 使用方法
 
+スクリプトの実行時に、第二引数として「1」を指定すると縦動画が生成されます。指定しない場合は横動画が生成されます。
+
 1. URLを指定して実行：
 
    ```bash
-   python3 main.py https://example.com
+   python3 main.py https://example.com [1]
    ```
 
 2. GitHubリポジトリのURLを指定して実行：
 
    ```bash
-   python3 main.py https://github.com/username/repository
+   python3 main.py https://github.com/username/repository [1]
    ```
 
 3. テキストファイルを指定して実行：
 
    ```bash
-   python3 main.py path/to/your/dialogue.txt
+   python3 main.py path/to/your/dialogue.txt [1]
    ```
 
    テキストファイルの形式：
@@ -89,8 +91,18 @@
 4. デフォルトのダイアログ生成を使用：
 
    ```bash
-   python3 main.py
+   python3 main.py [1]
    ```
+
+### 対話シナリオの生成
+
+scrape_and_generate.pyを直接実行することで、対話のシナリオのみを生成することができます。
+
+```bash
+python3 scrape_and_generate.py [URL]
+```
+
+これにより、指定されたURLの内容に基づいて対話シナリオが生成され、コンソールに出力されます。生成された対話は、main.pyで使用するための入力としても使用できます。
 
 ## 処理の流れ
 
