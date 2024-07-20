@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
-from moviepy.editor import AudioFileClip, concatenate_videoclips
+from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -102,11 +102,10 @@ def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str
     return video_files
 
 def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str):
-    from moviepy.editor import VideoFileClip, concatenate_videoclips
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) 
              for video, audio in zip(video_files, audio_files)]
     final_clip = concatenate_videoclips(clips)
-    final_clip.write_videofile(output_file)
+    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac")
 
 def main():
     if len(sys.argv) > 1:
