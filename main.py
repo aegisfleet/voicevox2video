@@ -65,7 +65,7 @@ def remove_noise(audio_data, sample_rate, cutoff=100, threshold=0.01, fade_durat
     audio_array = (audio_array * 32767.0).astype(np.int16)
     return audio_array.tobytes()
 
-def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str) -> List[str]:
+def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str, is_vertical: bool) -> List[str]:
     video_files = []
     animation_types = ["fade", "slide_right", "slide_left", "slide_top", "slide_bottom"]
     for i, ((speaker, text), audio_file) in enumerate(zip(dialogue, audio_files)):
@@ -73,12 +73,18 @@ def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
         character = "四国めたん" if speaker == 0 else "ずんだもん"
         animation_type = animation_types[i % len(animation_types)]
-        create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
-                                    font_path=None, animation_type=animation_type)
+        
+        if is_vertical:
+            create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
+                                        font_path=None, animation_type=animation_type, is_vertical=True)
+        else:
+            create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
+                                        font_path=None, animation_type=animation_type)
+        
         video_files.append(video_file)
     return video_files
 
-def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str):
+def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str, is_vertical: bool):
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) 
              for video, audio in zip(video_files, audio_files)]
 
@@ -86,7 +92,12 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     crossfade_duration = 0.1
     blank_duration = 1
 
-    blank_clip = ColorClip(size=(1280, 720), color=(0, 0, 0)).set_duration(blank_duration)
+    if is_vertical:
+        size = (720, 1280)
+    else:
+        size = (1280, 720)
+
+    blank_clip = ColorClip(size=size, color=(0, 0, 0)).set_duration(blank_duration)
 
     for i, clip in enumerate(clips):
         if i > 0:
@@ -100,7 +111,7 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
     final_clip = concatenate_videoclips([blank_clip] + crossfaded_clips + [blank_clip], method="compose")
 
-    bgm = AudioFileClip(bgm_file).volumex(0.1)  # pyright: ignore[reportAttributeAccessIssue]
+    bgm = AudioFileClip(bgm_file).volumex(0.1)
     if bgm.duration < final_clip.duration:
         bgm = bgm.audio_loop(duration=final_clip.duration)
     else:
@@ -121,6 +132,10 @@ def main():
         print("No URL or file provided. Using default dialogue generation.")
         dialogue = scrape_and_generate("")
 
+    is_vertical = False
+    if len(sys.argv) > 2 and sys.argv[2] == "1":
+        is_vertical = True
+
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
 
@@ -133,11 +148,11 @@ def main():
     save_dialogue(dialogue, dialogue_file)
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
-    video_files = create_dialogue_video(dialogue, audio_files, output_dir)
+    video_files = create_dialogue_video(dialogue, audio_files, output_dir, is_vertical)
 
     final_output = "output/final_dialogue_output.mp4"
     bgm_file = "./bgm/のんきな日常.mp3"
-    combine_dialogue_clips(video_files, audio_files, final_output, bgm_file)
+    combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, is_vertical)
 
     for file in audio_files + video_files:
         os.remove(file)
