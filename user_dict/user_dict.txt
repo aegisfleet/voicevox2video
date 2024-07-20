@@ -16,3 +16,4 @@ Claude,クロード,0
 Sonnet,ソネット,0
 Gemini,ジェミニ,0
 Flash,フラッシュ,0
+CrowdStrike,クラウドストライク,0
