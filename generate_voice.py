@@ -3,23 +3,18 @@ import json
 import os
 
 def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3):
-    # VOICEVOXサーバーのURL
-    # 環境変数「VOICEVOX_API_HOST」の値を使用する
     voicevox_api_host = os.getenv('VOICEVOX_API_HOST', 'localhost')
     if not voicevox_api_host:
         raise ValueError("VOICEVOX_API_HOST environment variable is not set.")
     base_url = f"http://{voicevox_api_host}:50021"
 
-    # 音声合成用のクエリを作成
     query_payload = {"text": text, "speaker": speaker}
     query_response = requests.post(f"{base_url}/audio_query", params=query_payload)
     query_response.raise_for_status()
     query_data = query_response.json()
 
-    # speedScaleを設定
     query_data["speedScale"] = speed_scale
 
-    # 音声合成を実行
     synthesis_payload = {"speaker": speaker}
     synthesis_response = requests.post(
         f"{base_url}/synthesis",
@@ -29,7 +24,6 @@ def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3):
     )
     synthesis_response.raise_for_status()
 
-    # 音声ファイルを保存
     with open(output_file, "wb") as f:
         f.write(synthesis_response.content)
 

@@ -5,11 +5,9 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
-from combine_audio_video import combine_audio_video
 from moviepy.editor import AudioFileClip, concatenate_videoclips
 import google.generativeai as genai
 
-# Gemini API の設定
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 model = genai.GenerativeModel(
@@ -20,18 +18,13 @@ def scrape_website(url: str) -> str:
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Remove script and style elements
     for script in soup(["script", "style"]):
         script.decompose()
 
-    # Get text
     text = soup.get_text()
 
-    # Break into lines and remove leading and trailing space on each
     lines = (line.strip() for line in text.splitlines())
-    # Break multi-headlines into a line each
     chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-    # Drop blank lines
     text = '\n'.join(chunk for chunk in chunks if chunk)
 
     return text
@@ -90,9 +83,9 @@ def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> L
     audio_files = []
     for i, (speaker, text) in enumerate(dialogue):
         audio_file = os.path.join(output_dir, f"audio_{i}.wav")
-        if speaker == 1:  # ずんだもん
+        if speaker == 1: 
             generate_voice(text, speaker=3, output_file=audio_file, speed_scale=1.4)
-        else:  # 四国めたん
+        else:  
             generate_voice(text, speaker=2, output_file=audio_file, speed_scale=1.3)
         audio_files.append(audio_file)
     return audio_files
@@ -127,7 +120,6 @@ def main():
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
 
-    # Gemini APIを使用して対話を生成
     dialogue = generate_dialogue(content)
     print("生成された対話:")
     for speaker, text in dialogue:
@@ -140,7 +132,6 @@ def main():
     final_output = "final_dialogue_output.mp4"
     combine_dialogue_clips(video_files, audio_files, final_output)
 
-    # Clean up temporary files
     for file in audio_files + video_files:
         os.remove(file)
     os.rmdir(output_dir)
