@@ -125,12 +125,14 @@ def remove_noise(audio_data, sample_rate, threshold=0.02):
 
 def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str) -> List[str]:
     video_files = []
+    animation_types = ["fade", "slide_right", "slide_left", "slide_top", "slide_bottom"]
     for i, ((speaker, text), audio_file) in enumerate(zip(dialogue, audio_files)):
         audio_duration = AudioFileClip(audio_file).duration
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
         character = "四国めたん" if speaker == 0 else "ずんだもん"
+        animation_type = animation_types[i % len(animation_types)]
         create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
-                                    font_path=None)
+                                    font_path=None, animation_type=animation_type)
         video_files.append(video_file)
     return video_files
 
