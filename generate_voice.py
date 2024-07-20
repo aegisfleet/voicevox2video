@@ -2,11 +2,13 @@ import requests
 import json
 import os
 
-def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, volume_scale=3.5):
+def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, volume_scale=3.5, intonation_scale=1.0):
     voicevox_api_host = os.getenv('VOICEVOX_API_HOST', 'localhost')
     if not voicevox_api_host:
         raise ValueError("VOICEVOX_API_HOST environment variable is not set.")
     base_url = f"http://{voicevox_api_host}:50021"
+
+    text = text.replace("。", "。 ").replace("、", "、 ")
 
     query_payload = {"text": text, "speaker": speaker}
     query_response = requests.post(f"{base_url}/audio_query", params=query_payload)
@@ -15,6 +17,7 @@ def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, v
 
     query_data["speedScale"] = speed_scale
     query_data["volumeScale"] = volume_scale
+    query_data["intonationScale"] = intonation_scale
 
     synthesis_payload = {"speaker": speaker}
     synthesis_response = requests.post(
