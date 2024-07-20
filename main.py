@@ -133,7 +133,7 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
              for video, audio in zip(video_files, audio_files)]
     final_clip = concatenate_videoclips(clips)
 
-    bgm = AudioFileClip(bgm_file).volumex(0.15)
+    bgm = AudioFileClip(bgm_file).volumex(0.15) # pyright: ignore[reportAttributeAccessIssue]
 
     if bgm.duration < final_clip.duration:
         bgm = bgm.audio_loop(duration=final_clip.duration)
