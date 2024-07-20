@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
-from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip
+from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip
 import google.generativeai as genai
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -109,10 +109,23 @@ def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str
         video_files.append(video_file)
     return video_files
 
-def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str):
+def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str):
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) 
              for video, audio in zip(video_files, audio_files)]
     final_clip = concatenate_videoclips(clips)
+
+    bgm = AudioFileClip(bgm_file).volumex(0.15)
+
+    if bgm.duration < final_clip.duration:
+        bgm = bgm.audio_loop(duration=final_clip.duration)
+    else:
+        bgm = bgm.subclip(0, final_clip.duration)
+
+    bgm = bgm.audio_fadein(0).audio_fadeout(3)
+
+    final_audio = CompositeAudioClip([final_clip.audio, bgm])
+    final_clip = final_clip.set_audio(final_audio)
+
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac")
 
 def main():
@@ -137,7 +150,8 @@ def main():
     video_files = create_dialogue_video(dialogue, audio_files, output_dir)
 
     final_output = "final_dialogue_output.mp4"
-    combine_dialogue_clips(video_files, audio_files, final_output)
+    bgm_file = "./bgm/のんきな日常.mp3"
+    combine_dialogue_clips(video_files, audio_files, final_output, bgm_file)
 
     for file in audio_files + video_files:
         os.remove(file)
