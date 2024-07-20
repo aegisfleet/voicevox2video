@@ -89,6 +89,12 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
                 raise
     return []
 
+def save_dialogue(dialogue: List[Tuple[int, str]], file_path: str) -> None:
+    with open(file_path, 'w', encoding='utf-8') as f:
+        for speaker, text in dialogue:
+            character_name = "四国めたん" if speaker == 0 else "ずんだもん"
+            f.write(f"{character_name}: {text}\n")
+
 def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> List[str]:
     audio_files = []
     for i, (speaker, text) in enumerate(dialogue):
@@ -147,28 +153,44 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac")
 
+def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
+    dialogue = []
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            speaker, text = line.strip().split(':', 1)
+            dialogue.append((int(speaker == "ずんだもん"), text.strip()))
+    return dialogue
+
 def main():
     if len(sys.argv) > 1:
-        url = sys.argv[1]
-        print(f"Scraping content from: {url}")
-        content = scrape_website(url)
+        url_or_file = sys.argv[1]
+        if url_or_file.startswith("http"):
+            print(f"Scraping content from: {url_or_file}")
+            content = scrape_website(url_or_file)
+            dialogue = generate_dialogue(content)
+        else:
+            print(f"Loading dialogue from file: {url_or_file}")
+            dialogue = load_dialogue(url_or_file)
     else:
-        print("No URL provided. Using default dialogue generation.")
+        print("No URL or file provided. Using default dialogue generation.")
         content = ""
+        dialogue = generate_dialogue(content)
 
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
 
-    dialogue = generate_dialogue(content)
     print("生成された対話:")
     for speaker, text in dialogue:
         character_name = "四国めたん" if speaker == 0 else "ずんだもん"
         print(f"{character_name}: {text}")
 
+    dialogue_file = "output/generated_dialogue.txt"
+    save_dialogue(dialogue, dialogue_file)
+
     audio_files = create_dialogue_audio(dialogue, output_dir)
     video_files = create_dialogue_video(dialogue, audio_files, output_dir)
 
-    final_output = "final_dialogue_output.mp4"
+    final_output = "output/final_dialogue_output.mp4"
     bgm_file = "./bgm/のんきな日常.mp3"
     combine_dialogue_clips(video_files, audio_files, final_output, bgm_file)
 
