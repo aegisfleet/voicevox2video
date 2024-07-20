@@ -11,3 +11,8 @@ mini,ミニ,0
 OpenAI,オープンエーアイ,0
 mem0,メモ,0
 美味しい,オイシイ,0
+Omni,オムニ,0
+Claude,クロード,0
+Sonnet,ソネット,0
+Gemini,ジェミニ,0
+Flash,フラッシュ,0
