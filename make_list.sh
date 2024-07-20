@@ -35,7 +35,7 @@ append_source_code() {
   echo "## Source Code" | tee -a "$output_file"
 
   while IFS= read -r line; do
-    if [[ "$line" != "./$output_file" ]] && ! is_binary_file "$line"; then
+    if [[ "$line" != "./$output_file" ]] && [[ "$line" != "./$0" ]] && ! is_binary_file "$line"; then
       local file_size
       file_size=$(stat -c%s "$line")
       if (( file_size <= 10240 )); then
@@ -49,6 +49,8 @@ append_source_code() {
       else
         echo "Ignored (file too large): $line"
       fi
+    elif [[ "$line" == "./$0" ]]; then
+      echo "Ignored (this script): $line"
     else
       if [[ "$line" == "./$output_file" ]]; then
         echo "Ignored (output file): $line"
