@@ -38,28 +38,24 @@ def scrape_website(url: str) -> str:
 
 def generate_dialogue(content: str) -> List[Tuple[int, str]]:
     chat_session = model.start_chat(history=[])
+    print(content[:5000])
 
     prompt = f"""
-    以下の内容に基づいて、2人のキャラクターによる短い対話を生成してください。各発言は400文字以内で、合計6つの発言にしてください。
+    以下の内容に基づいて、2人のキャラクターにより「ずんだもん」が質問して「四国めたん」が質問に回答する対話を生成してください。
+    対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、合計8つの発言にしてください。
     対話の形式は以下のようにしてください：
-    0: [四国めたんの発言]
     1: [ずんだもんの発言]
     0: [四国めたんの発言]
     1: [ずんだもんの発言]
     0: [四国めたんの発言]
     1: [ずんだもんの発言]
+    0: [四国めたんの発言]
+    1: [ずんだもんの発言]
+    0: [四国めたんの発言]
 
-    キャラクター設定：
+    ### キャラクター設定
 
-    四国めたん（キャラクター0）:
-    - 高等部二年生の女の子。第一人称はわたくし
-    - 常に金欠。趣味は中二病妄想
-    - 誰にでも遠慮せず、若干ツンデレ気味
-    - 口調：基本的にタメ口
-    - 相手のことを「ずんだもん」と呼ぶ
-    - 色々なことを知っている
-
-    ずんだもん（キャラクター1）:
+    ずんだもん:
     - ずんだ餅の精。第一人称はボクまたはずんだもん
     - やや不幸属性が備わっており、ないがしろにされることもしばしば
     - 趣味はその辺をふらふらすること、自分を大きく見せること
@@ -67,10 +63,18 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
     - 相手のことを「めたん」と呼ぶ
     - あまり知識がないが好奇心旺盛
 
-    参考内容：
-    {content[:1000]}
+    四国めたん:
+    - 高等部二年生の女の子。第一人称はわたくし
+    - 常に金欠。趣味は中二病妄想
+    - 誰にでも遠慮せず、若干ツンデレ気味
+    - 口調：基本的にタメ口
+    - 相手のことを「ずんだもん」と呼ぶ
+    - 色々なことを知っている
 
-    これらの設定と参考内容に基づいて、自然で面白い対話を生成してください。
+    ### 会話に使用する話題
+    {content[:5000]}
+
+    これらの設定と使用する話題に基づいて、話題から大きく外れないように自然で面白い対話を生成してください。
     """
 
     response = chat_session.send_message(prompt)
@@ -86,7 +90,10 @@ def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> L
     audio_files = []
     for i, (speaker, text) in enumerate(dialogue):
         audio_file = os.path.join(output_dir, f"audio_{i}.wav")
-        generate_voice(text, speaker=speaker, output_file=audio_file)
+        if speaker == 1:  # ずんだもん
+            generate_voice(text, speaker=3, output_file=audio_file, speed_scale=1.4)
+        else:  # 四国めたん
+            generate_voice(text, speaker=2, output_file=audio_file, speed_scale=1.3)
         audio_files.append(audio_file)
     return audio_files
 
