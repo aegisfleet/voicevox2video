@@ -33,13 +33,16 @@ def scrape_website(url: str) -> str:
 def extract_github_readme(url: str) -> str:
     if not url.endswith('/'):
         url += '/'
-    readme_url = url + 'raw/master/README.md'
+    readme_url = url + 'raw/main/README.md'
     response = requests.get(readme_url)
     if response.status_code != 200:
-        readme_url = url + 'raw/main/README.md'
+        readme_url = url + 'raw/master/README.md'
         response = requests.get(readme_url)
     if response.status_code == 200:
-        return response.text
+        soup = BeautifulSoup(response.text, 'html.parser')
+        text = soup.get_text()
+        lines = [line.strip() for line in text.split('\n') if line.strip()]
+        return '\n'.join(lines)
     return ""
 
 def summarize_content(content: str, length: int = 5000) -> str:
@@ -124,6 +127,14 @@ def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
         print(f"Loading dialogue from file: {url_or_file}")
         dialogue = load_dialogue(url_or_file)
     
+    print("生成された対話:")
+    for speaker, text in dialogue:
+        character_name = "四国めたん" if speaker == 0 else "ずんだもん"
+        print(f"{character_name}: {text}")
+
+    dialogue_file = "output/generated_dialogue.txt"
+    save_dialogue(dialogue, dialogue_file)
+
     return [(speaker, replace_metan(text)) for speaker, text in dialogue]
 
 def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
@@ -133,6 +144,12 @@ def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
             speaker, text = line.strip().split(':', 1)
             dialogue.append((int(speaker == "ずんだもん"), text.strip()))
     return dialogue
+
+def save_dialogue(dialogue: List[Tuple[int, str]], file_path: str) -> None:
+    with open(file_path, 'w', encoding='utf-8') as f:
+        for speaker, text in dialogue:
+            character_name = "四国めたん" if speaker == 0 else "ずんだもん"
+            f.write(f"{character_name}: {text}\n")
 
 if __name__ == "__main__":
     import sys

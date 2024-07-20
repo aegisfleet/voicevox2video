@@ -9,12 +9,6 @@ import numpy as np
 from scipy import signal
 from scrape_and_generate import scrape_and_generate
 
-def save_dialogue(dialogue: List[Tuple[int, str]], file_path: str) -> None:
-    with open(file_path, 'w', encoding='utf-8') as f:
-        for speaker, text in dialogue:
-            character_name = "四国めたん" if speaker == 0 else "ずんだもん"
-            f.write(f"{character_name}: {text}\n")
-
 def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> List[str]:
     audio_files = []
     for i, (speaker, text) in enumerate(dialogue):
@@ -138,14 +132,6 @@ def main():
 
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
-
-    print("生成された対話:")
-    for speaker, text in dialogue:
-        character_name = "四国めたん" if speaker == 0 else "ずんだもん"
-        print(f"{character_name}: {text}")
-
-    dialogue_file = "output/generated_dialogue.txt"
-    save_dialogue(dialogue, dialogue_file)
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
     video_files = create_dialogue_video(dialogue, audio_files, output_dir, is_vertical)
