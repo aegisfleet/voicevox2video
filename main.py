@@ -1,119 +1,13 @@
 import os
 import sys
-import requests
-from bs4 import BeautifulSoup, Comment
 from typing import List, Tuple
 from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
 from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip, ColorClip
-import google.generativeai as genai
 import wave
 import numpy as np
 from scipy import signal
-
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-)
-
-def scrape_website(url: str) -> str:
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    for script_or_style in soup(["script", "style"]):
-        script_or_style.decompose()
-
-    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-        comment.extract()
-
-    main_content = []
-    for tag in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']):
-        if tag.get_text(strip=True):
-            main_content.append(tag.get_text(strip=True))
-
-    text = "\n".join(main_content)
-
-    return text
-
-def extract_github_readme(url: str) -> str:
-    if not url.endswith('/'):
-        url += '/'
-    readme_url = url + 'raw/master/README.md'
-    response = requests.get(readme_url)
-    if response.status_code != 200:
-        readme_url = url + 'raw/main/README.md'
-        response = requests.get(readme_url)
-    if response.status_code == 200:
-        return response.text
-    return ""
-
-def summarize_content(content: str, length: int = 5000) -> str:
-    soup = BeautifulSoup(content, 'html.parser')
-    main_content = []
-    for tag in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']):
-        if tag.get_text(strip=True):
-            main_content.append(tag.get_text(strip=True))
-    text = "\n".join(main_content)
-    return text[:length]
-
-def generate_dialogue(content: str) -> List[Tuple[int, str]]:
-    for retry in range(3):
-        try:
-            chat_session = model.start_chat(history=[])
-            print(content[:5000])
-
-            prompt = f"""
-            以下の内容に基づいて、2人のキャラクターにより「ずんだもん」が質問して「四国めたん」が質問に回答する対話を生成してください。
-            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、合計8つの発言にしてください。
-            対話の形式は以下のようにしてください：
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-
-            ### キャラクター設定
-
-            ずんだもん:
-            - ずんだ餅の精。第一人称はボクまたはずんだもん
-            - やや不幸属性が備わっており、ないがしろにされることもしばしば
-            - 趣味はその辺をふらふらすること、自分を大きく見せること
-            - 口調：不自然な日本語にならない限り、語尾に必ず「～のだ」「～なのだ」をつけて喋る
-            - 相手のことをひらがなで「めたん」と呼ぶ
-            - あまり知識がないが好奇心旺盛
-
-            四国めたん:
-            - 高等部二年生の女の子。第一人称はわたくし
-            - 常に金欠。趣味は中二病妄想
-            - 誰にでも遠慮せず、若干ツンデレ気味
-            - 口調：基本的にタメ口
-            - 相手のことをひらがなで「ずんだもん」と呼ぶ
-            - 色々なことを知っている
-
-            ### 会話に使用する話題
-            {content[:5000]}
-
-            これらの設定と使用する話題に基づいて、話題に対する深い考察を行いながら自然で面白い対話を生成してください。
-            """
-
-            response = chat_session.send_message(prompt)
-
-            dialogue = []
-            for line in response.text.strip().split('\n'):
-                speaker, text = line.split(':', 1)
-                dialogue.append((int(speaker), text.strip()))
-
-            return dialogue
-        except ValueError as e:
-            print(f"エラーが発生しました: {e}")
-            print(f"リトライ {retry+1} 回目...")
-            if retry == 2:
-                raise
-    return []
+from scrape_and_generate import scrape_and_generate
 
 def save_dialogue(dialogue: List[Tuple[int, str]], file_path: str) -> None:
     with open(file_path, 'w', encoding='utf-8') as f:
@@ -219,31 +113,13 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", 
                                bitrate="5000k", audio_bitrate="192k")
 
-def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
-    dialogue = []
-    with open(file_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            speaker, text = line.strip().split(':', 1)
-            dialogue.append((int(speaker == "ずんだもん"), text.strip()))
-    return dialogue
-
 def main():
     if len(sys.argv) > 1:
         url_or_file = sys.argv[1]
-        if url_or_file.startswith("http"):
-            print(f"Scraping content from: {url_or_file}")
-            if "github.com" in url_or_file:
-                content = extract_github_readme(url_or_file)
-            else:
-                content = scrape_website(url_or_file)
-            dialogue = generate_dialogue(content)
-        else:
-            print(f"Loading dialogue from file: {url_or_file}")
-            dialogue = load_dialogue(url_or_file)
+        dialogue = scrape_and_generate(url_or_file)
     else:
         print("No URL or file provided. Using default dialogue generation.")
-        content = ""
-        dialogue = generate_dialogue(content)
+        dialogue = scrape_and_generate("")
 
     output_dir = "tmp"
     os.makedirs(output_dir, exist_ok=True)
