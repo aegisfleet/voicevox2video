@@ -26,7 +26,7 @@ def create_text_image(text: str, character: str, font_size: int, font_path: str,
     img = Image.new('RGBA', size, bg_color)
     draw = ImageDraw.Draw(img)
 
-    lines = [character] + textwrap.wrap(text, width=20)
+    lines = [character] + textwrap.wrap(text, width=30)
 
     _, _, _, line_height = font.getbbox("A")
 
