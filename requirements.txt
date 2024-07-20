@@ -3,3 +3,4 @@ moviepy
 Pillow
 numpy
 google-generativeai
+beautifulsoup4

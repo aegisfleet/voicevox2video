@@ -1,7 +1,12 @@
 name: Generate Video with VOICEVOX
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to scrape for dialogue content'
+        required: false
+        default: ''
 
 jobs:
   build:
@@ -35,7 +40,12 @@ jobs:
     - name: Run main script
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      run: python3 main.py
+      run: |
+        if [ -n "${{ github.event.inputs.url }}" ]; then
+          python3 main.py "${{ github.event.inputs.url }}"
+        else
+          python3 main.py
+        fi
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
