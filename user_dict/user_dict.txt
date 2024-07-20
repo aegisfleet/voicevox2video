@@ -1,0 +1,13 @@
+pytest,パイテスト,0
+voicevox,ボイスボックス,0
+anthropic,アンスロピック,0
+FastAPI,ファストエーピーアイ,0
+GitHub,ギットハブ,0
+Actions,アクションズ,0
+GPT,ジーピーティー,0
+4o,フォーオー,0
+Turbo,ターボ,0
+mini,ミニ,0
+OpenAI,オープンエーアイ,0
+mem0,メモ,0
+美味しい,オイシイ,0

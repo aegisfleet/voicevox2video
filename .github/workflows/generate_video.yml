@@ -37,6 +37,9 @@ jobs:
     - name: Install ffmpeg
       run: sudo apt-get install -y ffmpeg
 
+    - name: Add user dict
+      run: python3 user_dict/user_dict_manager.py
+
     - name: Run main script
       env:
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
