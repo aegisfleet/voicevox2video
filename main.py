@@ -7,6 +7,8 @@ from generate_voice import generate_voice
 from add_subtitles import create_video_with_subtitles
 from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip
 import google.generativeai as genai
+import wave
+import numpy as np
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -95,8 +97,25 @@ def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> L
             generate_voice(text, speaker=3, output_file=audio_file, speed_scale=1.4)
         else:  
             generate_voice(text, speaker=2, output_file=audio_file, speed_scale=1.3)
+
+        with wave.open(audio_file, 'rb') as wf:
+            params = wf.getparams()
+            data = wf.readframes(wf.getnframes())
+
+        data = remove_noise(data, params.framerate)
+
+        with wave.open(audio_file, 'wb') as wf:
+            wf.setparams(params)
+            wf.writeframes(data)
+
         audio_files.append(audio_file)
     return audio_files
+
+def remove_noise(audio_data, sample_rate, threshold=0.02):
+    audio_array = np.frombuffer(audio_data, dtype=np.int16) / 32768.0
+    audio_array = np.where(np.abs(audio_array) > threshold, audio_array, 0)
+    audio_array = (audio_array * 32768.0).astype(np.int16)
+    return audio_array.tobytes()
 
 def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str) -> List[str]:
     video_files = []
