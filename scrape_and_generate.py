@@ -156,9 +156,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         url_or_file = sys.argv[1]
         dialogue = scrape_and_generate(url_or_file)
-        print("生成された対話:")
-        for speaker, text in dialogue:
-            character_name = "四国めたん" if speaker == 0 else "ずんだもん"
-            print(f"{character_name}: {text}")
     else:
         print("URLまたはファイルパスを指定してください。")
