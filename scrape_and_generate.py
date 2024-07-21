@@ -113,7 +113,9 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
     return []
 
 def replace_metan(text: str) -> str:
-    return re.sub(r'メタん', 'めたん', text)
+    text = re.sub(r'メタん', 'めたん', text)
+    text = re.sub(r'なのだな？', 'なのだ？', text)
+    return text
 
 def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
     if url_or_file.startswith("http"):
@@ -127,6 +129,8 @@ def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
         print(f"Loading dialogue from file: {url_or_file}")
         dialogue = load_dialogue(url_or_file)
     
+    dialogue = [(speaker, replace_metan(text)) for speaker, text in dialogue]
+
     print("生成された対話:")
     for speaker, text in dialogue:
         character_name = "四国めたん" if speaker == 0 else "ずんだもん"
@@ -135,7 +139,7 @@ def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
     dialogue_file = "output/generated_dialogue.txt"
     save_dialogue(dialogue, dialogue_file)
 
-    return [(speaker, replace_metan(text)) for speaker, text in dialogue]
+    return dialogue
 
 def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
     dialogue = []
