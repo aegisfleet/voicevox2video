@@ -3,7 +3,7 @@ import shutil
 import sys
 from typing import List, Tuple
 from generate_voice import generate_voice
-from add_subtitles import create_video_with_subtitles
+from generate_movie import create_video_with_subtitles
 from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip, CompositeAudioClip, ColorClip
 import wave
 import numpy as np
