@@ -65,6 +65,9 @@ def wrap_text(text: str, width: int) -> list:
 def create_text_image(text: str, character: str, font_size: int, font_path: str, size: Tuple[int, int],
                       is_vertical: bool = False) -> np.ndarray:
     font = ImageFont.truetype(font_path, font_size)
+    character_font_size = font_size + 5
+    character_font = ImageFont.truetype(font_path, character_font_size)
+
     img = Image.new('RGB', size, (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
@@ -84,13 +87,16 @@ def create_text_image(text: str, character: str, font_size: int, font_path: str,
 
     margin_vertical = 20
     margin_horizontal = 40
+    margin_character_name = 20
+
     bubble_width = text_width + margin_horizontal * 2
     bubble_height = text_height + margin_vertical * 3
-    
+
     bubble_x = (size[0] - bubble_width) // 2
-    bubble_y = (size[1] - bubble_height) // 2 + font_size + margin_vertical + 10
+    bubble_y = (size[1] - bubble_height) // 2 + font_size + margin_vertical + margin_character_name
+
     name_x = size[0] // 2
-    name_y = bubble_y - font_size - margin_vertical - 10
+    name_y = bubble_y - character_font_size - margin_vertical - margin_character_name
 
     shadow_offset = 15
     draw.rounded_rectangle([bubble_x + shadow_offset, bubble_y + shadow_offset, 
@@ -103,21 +109,30 @@ def create_text_image(text: str, character: str, font_size: int, font_path: str,
 
     x_text = bubble_x + margin_horizontal
     y_text = bubble_y + margin_vertical
+
+    outline_width = 0.1
+
     for line in lines:
+        for offset_x in np.arange(-outline_width, outline_width + 0.1):
+            for offset_y in np.arange(-outline_width, outline_width + 0.1):
+                if offset_x != 0 or offset_y != 0:
+                    draw.text((x_text + offset_x, y_text + offset_y), line, font=font, fill=text_color)
         draw.text((x_text, y_text), line, font=font, fill=text_color)
         y_text += line_height
 
-    name_width, name_height = font.getbbox(character)[2:]
+    name_width, name_height = character_font.getbbox(character)[2:]
     outline_color = character_color
-    outline_width = 2
 
     name_pos = (name_x - name_width // 2, name_y)
 
-    for offset_x in range(-outline_width, outline_width + 1):
-        for offset_y in range(-outline_width, outline_width + 1):
-            draw.text((name_pos[0] + offset_x, name_pos[1] + offset_y), character, font=font, fill=outline_color)
+    name_outline_width = 6
 
-    draw.text(name_pos, character, font=font, fill=text_color)
+    for offset_x in range(-name_outline_width, name_outline_width + 1):
+        for offset_y in range(-name_outline_width, name_outline_width + 1):
+            if offset_x != 0 or offset_y != 0:
+                draw.text((name_pos[0] + offset_x, name_pos[1] + offset_y), character, font=character_font, fill=outline_color)
+
+    draw.text(name_pos, character, font=character_font, fill=text_color)
 
     return np.array(img)
 
