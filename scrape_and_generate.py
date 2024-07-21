@@ -64,7 +64,7 @@ def summarize_content(content: str, length: int = 5000) -> str:
     text = "\n".join(main_content)
     return text[:length]
 
-def generate_dialogue(content: str) -> List[Tuple[int, str]]:
+def generate_dialogue(content: str) -> List[Tuple[str, str]]:
     for retry in range(3):
         try:
             chat_session = model.start_chat(history=[])
@@ -74,14 +74,14 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
             以下の内容に基づいて、2人のキャラクターにより「ずんだもん」が質問して「四国めたん」が質問に回答する対話を生成してください。
             対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、合計8つの発言にしてください。
             対話の形式は以下のようにしてください：
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
-            1: [ずんだもんの発言]
-            0: [四国めたんの発言]
+            ずんだもん: [ずんだもんの発言]
+            四国めたん: [四国めたんの発言]
+            ずんだもん: [ずんだもんの発言]
+            四国めたん: [四国めたんの発言]
+            ずんだもん: [ずんだもんの発言]
+            四国めたん: [四国めたんの発言]
+            ずんだもん: [ずんだもんの発言]
+            四国めたん: [四国めたんの発言]
 
             ### キャラクター設定
 
@@ -112,7 +112,7 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
             dialogue = []
             for line in response.text.strip().split('\n'):
                 speaker, text = line.split(':', 1)
-                dialogue.append((int(speaker), text.strip()))
+                dialogue.append((speaker, text.strip()))
 
             return dialogue
         except ValueError as e:
@@ -128,7 +128,7 @@ def replace_metan(text: str) -> str:
     text = re.sub(r'なのだな？', 'なのだ？', text)
     return text
 
-def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
+def scrape_and_generate(url_or_file: str) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
         if "github.com" in url_or_file:
@@ -144,27 +144,25 @@ def scrape_and_generate(url_or_file: str) -> List[Tuple[int, str]]:
 
     print("生成された対話:")
     for speaker, text in dialogue:
-        character_name = "四国めたん" if speaker == 0 else "ずんだもん"
-        print(f"{character_name}: {text}")
+        print(f"{speaker}: {text}")
 
     dialogue_file = "output/generated_dialogue.txt"
     save_dialogue(dialogue, dialogue_file)
 
     return dialogue
 
-def load_dialogue(file_path: str) -> List[Tuple[int, str]]:
+def load_dialogue(file_path: str) -> List[Tuple[str, str]]:
     dialogue = []
     with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             speaker, text = line.strip().split(':', 1)
-            dialogue.append((int(speaker == "ずんだもん"), text.strip()))
+            dialogue.append((speaker, text.strip()))
     return dialogue
 
-def save_dialogue(dialogue: List[Tuple[int, str]], file_path: str) -> None:
+def save_dialogue(dialogue: List[Tuple[str, str]], file_path: str) -> None:
     with open(file_path, 'w', encoding='utf-8') as f:
         for speaker, text in dialogue:
-            character_name = "四国めたん" if speaker == 0 else "ずんだもん"
-            f.write(f"{character_name}: {text}\n")
+            f.write(f"{speaker}: {text}\n")
 
 if __name__ == "__main__":
     import sys

@@ -10,9 +10,24 @@ import numpy as np
 from scipy import signal
 from scrape_and_generate import scrape_and_generate
 
-def create_audio_file(speaker: int, text: str, output_file: str):
-    speed_scale = 1.4 if speaker == 1 else 1.3
-    generate_voice(text, speaker=3 if speaker == 1 else 2, output_file=output_file, speed_scale=speed_scale)
+CHARACTER_TO_SPEAKER = {
+    "四国めたん": 2,
+    "ずんだもん": 3,
+    "春日部つむぎ": 8,
+    "雨晴はう": 10,
+    "波音リツ": 9,
+    "玄野武宏": 11,
+    "白上虎太郎": 12,
+    "青山龍星": 13,
+    "冥鳴ひまり": 14,
+    "もち子さん": 20,
+    "剣崎雌雄": 21
+}
+
+def create_audio_file(character: str, text: str, output_file: str):
+    speaker = CHARACTER_TO_SPEAKER.get(character, 2)
+    speed_scale = 1.4 if character == "ずんだもん" else 1.3
+    generate_voice(text, speaker=speaker, output_file=output_file, speed_scale=speed_scale)
 
     with wave.open(output_file, 'rb') as wf:
         params = wf.getparams()
@@ -24,11 +39,11 @@ def create_audio_file(speaker: int, text: str, output_file: str):
         wf.setparams(params)
         wf.writeframes(data)
 
-def create_dialogue_audio(dialogue: List[Tuple[int, str]], output_dir: str) -> List[str]:
+def create_dialogue_audio(dialogue: List[Tuple[str, str]], output_dir: str) -> List[str]:
     audio_files = []
-    for i, (speaker, text) in enumerate(dialogue):
+    for i, (character, text) in enumerate(dialogue):
         audio_file = os.path.join(output_dir, f"audio_{i}.wav")
-        create_audio_file(speaker, text, audio_file)
+        create_audio_file(character, text, audio_file)
         audio_files.append(audio_file)
     return audio_files
 
@@ -55,19 +70,18 @@ def remove_noise(audio_data, sample_rate, cutoff=100, threshold=0.01, fade_durat
     audio_array = (audio_array * 32767.0).astype(np.int16)
     return audio_array.tobytes()
 
-def create_video_file(speaker: int, text: str, audio_file: str, output_file: str, is_vertical: bool, animation_type: str):
+def create_video_file(character: str, text: str, audio_file: str, output_file: str, is_vertical: bool, animation_type: str):
     audio_duration = AudioFileClip(audio_file).duration
-    character = "四国めたん" if speaker == 0 else "ずんだもん"
     create_video_with_subtitles(text, character, duration=audio_duration, output_file=output_file, 
                                 font_path=None, animation_type=animation_type, is_vertical=is_vertical)
 
-def create_dialogue_video(dialogue: List[Tuple[int, str]], audio_files: List[str], output_dir: str, is_vertical: bool) -> List[str]:
+def create_dialogue_video(dialogue: List[Tuple[str, str]], audio_files: List[str], output_dir: str, is_vertical: bool) -> List[str]:
     video_files = []
     animation_types = ["fade", "slide_right", "slide_left", "slide_top", "slide_bottom"]
-    for i, ((speaker, text), audio_file) in enumerate(zip(dialogue, audio_files)):
+    for i, ((character, text), audio_file) in enumerate(zip(dialogue, audio_files)):
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
         animation_type = animation_types[i % len(animation_types)]
-        create_video_file(speaker, text, audio_file, video_file, is_vertical, animation_type)
+        create_video_file(character, text, audio_file, video_file, is_vertical, animation_type)
         video_files.append(video_file)
     return video_files
 
