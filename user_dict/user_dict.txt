@@ -18,3 +18,4 @@ Gemini,ジェミニ,0
 Flash,フラッシュ,0
 CrowdStrike,クラウドストライク,0
 Immich,イミッヒ,0
+Ubuntu,ウブンツ,0
