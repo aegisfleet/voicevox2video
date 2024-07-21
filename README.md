@@ -98,10 +98,10 @@ https://github.com/user-attachments/assets/5b911c2f-d432-4906-9e6a-c54130f01904
 
 ### 対話シナリオの生成
 
-scrape_and_generate.pyを直接実行することで、対話のシナリオのみを生成することができます。
+generate_scenario.pyを直接実行することで、対話のシナリオのみを生成することができます。
 
 ```bash
-python3 scrape_and_generate.py [URL]
+python3 generate_scenario.py [URL]
 ```
 
 これにより、指定されたURLの内容に基づいて対話シナリオが生成され、`output/generated_dialogue.txt`にファイル出力されます。生成されたファイルは、main.pyの引数に指定して使用できます。

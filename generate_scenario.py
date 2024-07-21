@@ -128,7 +128,7 @@ def replace_metan(text: str) -> str:
     text = re.sub(r'なのだな？', 'なのだ？', text)
     return text
 
-def scrape_and_generate(url_or_file: str) -> List[Tuple[str, str]]:
+def generate_scenario(url_or_file: str) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
         if "github.com" in url_or_file:
@@ -168,6 +168,6 @@ if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1:
         url_or_file = sys.argv[1]
-        dialogue = scrape_and_generate(url_or_file)
+        dialogue = generate_scenario(url_or_file)
     else:
         print("URLまたはファイルパスを指定してください。")

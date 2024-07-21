@@ -8,7 +8,7 @@ from moviepy.editor import AudioFileClip, concatenate_videoclips, VideoFileClip,
 import wave
 import numpy as np
 from scipy import signal
-from scrape_and_generate import scrape_and_generate
+from generate_scenario import generate_scenario
 
 CHARACTER_TO_SPEAKER = {
     "四国めたん": 2,
@@ -111,10 +111,10 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 def main():
     if len(sys.argv) > 1:
         url_or_file = sys.argv[1]
-        dialogue = scrape_and_generate(url_or_file)
+        dialogue = generate_scenario(url_or_file)
     else:
         print("No URL or file provided. Using default dialogue generation.")
-        dialogue = scrape_and_generate("")
+        dialogue = generate_scenario("")
     is_vertical = len(sys.argv) > 2 and sys.argv[2] == "1"
     output_dir = "tmp"
     if os.path.exists(output_dir):
