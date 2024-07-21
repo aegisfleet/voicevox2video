@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 from typing import List, Tuple
 from generate_voice import generate_voice
@@ -131,6 +132,8 @@ def main():
         is_vertical = True
 
     output_dir = "tmp"
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
