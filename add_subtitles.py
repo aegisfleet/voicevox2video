@@ -3,7 +3,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip, vfx
 from typing import Union, Tuple, Optional
 import os
-import textwrap
+import unicodedata
 
 def find_font() -> str:
     possible_fonts = [
@@ -35,6 +35,33 @@ def get_character_color(character: str) -> Tuple[int, int, int]:
     }
     return color_map.get(character, (255, 255, 255))
 
+def is_fullwidth(char: str) -> bool:
+    return unicodedata.east_asian_width(char) in 'WF'
+
+def wrap_text(text: str, width: int) -> list:
+    lines = []
+    line = ''
+    line_length = 0
+
+    for char in text:
+        if is_fullwidth(char):
+            char_length = 2
+        else:
+            char_length = 1
+
+        if line_length + char_length > width:
+            lines.append(line)
+            line = char
+            line_length = char_length
+        else:
+            line += char
+            line_length += char_length
+
+    if line:
+        lines.append(line)
+
+    return lines
+
 def create_text_image(text: str, character: str, font_size: int, font_path: str, size: Tuple[int, int],
                       is_vertical: bool = False) -> np.ndarray:
     font = ImageFont.truetype(font_path, font_size)
@@ -46,9 +73,9 @@ def create_text_image(text: str, character: str, font_size: int, font_path: str,
     shadow_color = tuple(int(c * 0.4) for c in get_character_color(character))
 
     if is_vertical:
-        lines = textwrap.wrap(text, width=15)
+        lines = wrap_text(text, width=30)
     else:
-        lines = textwrap.wrap(text, width=30)
+        lines = wrap_text(text, width=60)
 
     _, _, _, line_height = font.getbbox("A")
 
