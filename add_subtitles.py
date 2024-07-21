@@ -61,9 +61,9 @@ def create_text_image(text: str, character: str, font_size: int, font_path: str,
     bubble_height = text_height + margin_vertical * 3
     
     bubble_x = (size[0] - bubble_width) // 2
-    bubble_y = (size[1] - bubble_height) // 2 + font_size + margin_vertical
+    bubble_y = (size[1] - bubble_height) // 2 + font_size + margin_vertical + 10
     name_x = size[0] // 2
-    name_y = bubble_y - font_size - margin_vertical
+    name_y = bubble_y - font_size - margin_vertical - 10
 
     shadow_offset = 15
     draw.rounded_rectangle([bubble_x + shadow_offset, bubble_y + shadow_offset, 
