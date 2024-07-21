@@ -88,16 +88,17 @@ def create_dialogue_video(dialogue: List[Tuple[str, str]], audio_files: List[str
 def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str, is_vertical: bool):
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) for video, audio in zip(video_files, audio_files)]
     crossfaded_clips = []
-    crossfade_duration = 0.3
+    fade_in_duration = 0.1
+    fade_out_duration = 0.3
     blank_duration = 1
     size = (720, 1280) if is_vertical else (1280, 720)
     blank_clip = ColorClip(size=size, color=(0, 0, 0)).set_duration(blank_duration)
     for i, clip in enumerate(clips):
         if i > 0:
-            clip = clip.crossfadein(crossfade_duration)
+            clip = clip.crossfadein(fade_in_duration)
         if i < len(clips) - 1:
-            clip = clip.crossfadeout(crossfade_duration)
-        clip = clip.audio_fadein(crossfade_duration).audio_fadeout(crossfade_duration)
+            clip = clip.crossfadeout(fade_out_duration)
+        clip = clip.audio_fadein(fade_in_duration).audio_fadeout(fade_out_duration)
         crossfaded_clips.append(clip)
     final_clip = concatenate_videoclips([blank_clip] + crossfaded_clips + [blank_clip], method="compose")
     bgm = AudioFileClip(bgm_file).volumex(0.1)
