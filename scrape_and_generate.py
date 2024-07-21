@@ -15,11 +15,21 @@ def scrape_website(url: str) -> str:
     response = requests.get(url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    for script_or_style in soup(["script", "style"]):
-        script_or_style.decompose()
+    unwanted_phrases = [
+        "Qiita Engineer Festa 2024",
+        "Trend",
+        "Question",
+        "Official Event",
+        "Official Column",
+        "signpostCareer",
+        "Organization",
+        "Go to list of users who liked"
+    ]
 
-    for comment in soup.find_all(string=lambda text: isinstance(text, Comment)):
-        comment.extract()
+    for phrase in unwanted_phrases:
+        for text_node in soup.find_all(string=lambda text: phrase in text):
+            cleaned_text = text_node.replace(phrase, "")
+            text_node.replace_with(cleaned_text)
 
     main_content = []
     for tag in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']):
