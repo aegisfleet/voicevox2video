@@ -124,6 +124,7 @@ def generate_dialogue(content: str) -> List[Tuple[int, str]]:
 
 def replace_metan(text: str) -> str:
     text = re.sub(r'メタん', 'めたん', text)
+    text = re.sub(r'メタン', 'めたん', text)
     text = re.sub(r'なのだな？', 'なのだ？', text)
     return text
 

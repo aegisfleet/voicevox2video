@@ -21,3 +21,5 @@ Immich,イミッヒ,0
 Ubuntu,ウブンツ,0
 user,ユーザー,0
 name,ネーム,0
+Generator,ジェネレーター,0
+Tabby,タビー,0
