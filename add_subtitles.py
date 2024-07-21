@@ -1,5 +1,5 @@
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip, vfx
 from typing import Union, Tuple, Optional
 import os
@@ -19,76 +19,101 @@ def find_font() -> str:
 
     raise FileNotFoundError("適切な日本語フォントが見つかりません。システムに日本語フォントがインストールされているか確認してください。")
 
+def get_character_color(character: str) -> Tuple[int, int, int]:
+    color_map = {
+        "四国めたん": (255, 0, 240),  # ピンク
+        "ずんだもん": (0, 255, 0),    # 緑
+        "春日部つむぎ": (255, 165, 0),  # オレンジ
+        "雨晴はう": (0, 191, 255),    # ディープスカイブルー
+        "波音リツ": (255, 0, 0),      # 赤
+        "玄野武宏": (0, 0, 255),      # 青
+        "白上虎太郎": (255, 215, 0),   # 金
+        "青山龍星": (138, 43, 226),   # ブルーバイオレット
+        "冥鳴ひまり": (75, 0, 130),    # インディゴ
+        "もち子さん": (255, 192, 203), # ピンク
+        "剣崎雌雄": (0, 128, 0),      # グリーン
+    }
+    return color_map.get(character, (255, 255, 255))
+
 def create_text_image(text: str, character: str, font_size: int, font_path: str, size: Tuple[int, int],
-                      color: Union[str, Tuple[int, int, int, int]] = 'white',
-                      bg_color: Union[str, Tuple[int, int, int, int]] = 'transparent',
                       is_vertical: bool = False) -> np.ndarray:
     font = ImageFont.truetype(font_path, font_size)
-    img = Image.new('RGBA', size, bg_color)
+    img = Image.new('RGB', size, (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
+    text_color = (255, 255, 255)
+    character_color = tuple(int(c * 0.8) for c in get_character_color(character))
+    shadow_color = tuple(int(c * 0.4) for c in get_character_color(character))
+
     if is_vertical:
-        lines = [character] + textwrap.wrap(text, width=15)
+        lines = textwrap.wrap(text, width=15)
     else:
-        lines = [character] + textwrap.wrap(text, width=30)
+        lines = textwrap.wrap(text, width=30)
 
     _, _, _, line_height = font.getbbox("A")
 
-    total_height = len(lines) * line_height
-    if is_vertical:
-        y_text = (size[1] - total_height) // 2
-    else:
-        y_text = (size[1] - total_height) // 2
+    text_width = max(font.getbbox(line)[2] for line in lines)
+    text_height = len(lines) * line_height
 
-    max_line_width = max(font.getbbox(line)[2] for line in lines)
+    margin_vertical = 20
+    margin_horizontal = 40
+    bubble_width = text_width + margin_horizontal * 2
+    bubble_height = text_height + margin_vertical * 3
+    
+    bubble_x = (size[0] - bubble_width) // 2
+    bubble_y = (size[1] - bubble_height) // 2 + font_size + margin_vertical
+    name_x = size[0] // 2
+    name_y = bubble_y - font_size - margin_vertical
 
-    for i, line in enumerate(lines):
-        left, top, right, bottom = font.getbbox(line)
-        line_width = right - left
+    shadow_offset = 15
+    draw.rounded_rectangle([bubble_x + shadow_offset, bubble_y + shadow_offset, 
+                            bubble_x + bubble_width + shadow_offset, bubble_y + bubble_height + shadow_offset],
+                           radius=10, fill=shadow_color)
 
-        if is_vertical:
-            x_text = (size[0] - max_line_width) // 2
-        else:
-            x_text = (size[0] - line_width) // 2
+    bubble_color = character_color
+    draw.rounded_rectangle([bubble_x, bubble_y, bubble_x + bubble_width, bubble_y + bubble_height],
+                           radius=10, fill=bubble_color, outline=character_color, width=2)
 
-        if i == 0: 
-            if character == "四国めたん":
-                outline_color = (255, 0, 240) 
-            else:
-                outline_color = (0, 255, 0)  
-
-            for offset in range(-2, 3):
-                draw.text((x_text + offset, y_text), line, font=font, fill=outline_color)
-                draw.text((x_text, y_text + offset), line, font=font, fill=outline_color)
-            
-            draw.text((x_text, y_text), line, font=font, fill=color)
-        else:
-            draw.text((x_text, y_text), line, font=font, fill=color)
-        
+    x_text = bubble_x + margin_horizontal
+    y_text = bubble_y + margin_vertical
+    for line in lines:
+        draw.text((x_text, y_text), line, font=font, fill=text_color)
         y_text += line_height
+
+    name_width, name_height = font.getbbox(character)[2:]
+    outline_color = character_color
+    outline_width = 2
+
+    name_pos = (name_x - name_width // 2, name_y)
+
+    for offset_x in range(-outline_width, outline_width + 1):
+        for offset_y in range(-outline_width, outline_width + 1):
+            draw.text((name_pos[0] + offset_x, name_pos[1] + offset_y), character, font=font, fill=outline_color)
+
+    draw.text(name_pos, character, font=font, fill=text_color)
 
     return np.array(img)
 
 def add_animation(clip, animation_type: str, duration: float, is_vertical: bool = False) -> ImageClip:
-    if animation_type == "fade":
+    if (animation_type == "fade"):
         return clip.fx(vfx.fadeout, duration=0.5).fx(vfx.fadein, duration=0.5)
-    elif animation_type == "slide_right":
-        if is_vertical:
+    elif (animation_type == "slide_right"):
+        if (is_vertical):
             return clip.set_position(lambda t: (0, min(0, 1280 * (t/0.5 - 1))))
         else:
             return clip.set_position(lambda t: (min(0, 1280 * (t/0.5 - 1)), 0))
-    elif animation_type == "slide_left":
-        if is_vertical:
+    elif (animation_type == "slide_left"):
+        if (is_vertical):
             return clip.set_position(lambda t: (0, max(0, 1280 * (1 - t/0.5))))
         else:
             return clip.set_position(lambda t: (max(0, 1280 * (1 - t/0.5)), 0))
-    elif animation_type == "slide_top":
-        if is_vertical:
+    elif (animation_type == "slide_top"):
+        if (is_vertical):
             return clip.set_position(lambda t: (max(0, 720 * (1 - t/0.5)), 0))
         else:
             return clip.set_position(lambda t: (0, min(0, 720 * (t/0.5 - 1))))
-    elif animation_type == "slide_bottom":
-        if is_vertical:
+    elif (animation_type == "slide_bottom"):
+        if (is_vertical):
             return clip.set_position(lambda t: (min(0, 720 * (t/0.5 - 1)), 0))
         else:
             return clip.set_position(lambda t: (0, max(0, 720 * (1 - t/0.5))))
@@ -113,7 +138,7 @@ def create_video_with_subtitles(subtitle_text: str, character: str, duration: fl
     background = ColorClip(size=size, color=(0, 0, 0)).set_duration(duration)
 
     text_img = create_text_image(subtitle_text, character, font_size=font_size, font_path=font_path,
-                                 size=size, color='white', bg_color=(0,0,0,128), is_vertical=is_vertical)
+                                 size=size, is_vertical=is_vertical)
     text_clip = ImageClip(text_img).set_duration(duration)
 
     animated_text_clip = add_animation(text_clip, animation_type, duration, is_vertical)
