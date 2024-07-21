@@ -83,7 +83,7 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
              for video, audio in zip(video_files, audio_files)]
 
     crossfaded_clips = []
-    crossfade_duration = 0.1
+    crossfade_duration = 0.3
     blank_duration = 1
 
     if is_vertical:

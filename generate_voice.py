@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from pydub import AudioSegment
 
 def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, volume_scale=3.5, intonation_scale=1.0):
     voicevox_api_host = os.getenv('VOICEVOX_API_HOST', 'localhost')
@@ -28,8 +29,16 @@ def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, v
     )
     synthesis_response.raise_for_status()
 
-    with open(output_file, "wb") as f:
+    temp_output_file = "temp_output.wav"
+    with open(temp_output_file, "wb") as f:
         f.write(synthesis_response.content)
+
+    sound = AudioSegment.from_wav(temp_output_file)
+    silence = AudioSegment.silent(duration=300)
+    combined = sound + silence
+    combined.export(output_file, format="wav")
+
+    os.remove(temp_output_file)
 
     print(f"音声ファイルが生成されました: {output_file}")
 
