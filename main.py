@@ -1,7 +1,7 @@
 import argparse
 import os
 import shutil
-import sys
+import json
 from typing import List, Tuple
 from generate_voice import generate_voice
 from generate_movie import create_video_with_subtitles
@@ -11,22 +11,14 @@ import numpy as np
 from scipy import signal
 from generate_scenario import generate_scenario
 
-CHARACTER_TO_SPEAKER = {
-    "四国めたん": 2,
-    "ずんだもん": 3,
-    "春日部つむぎ": 8,
-    "雨晴はう": 10,
-    "波音リツ": 9,
-    "玄野武宏": 11,
-    "白上虎太郎": 12,
-    "青山龍星": 13,
-    "冥鳴ひまり": 14,
-    "もち子さん": 20,
-    "剣崎雌雄": 21
-}
+def load_character_config():
+    with open('config/characters.json', 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+CHARACTER_CONFIG = load_character_config()
 
 def create_audio_file(character: str, text: str, output_file: str):
-    speaker = CHARACTER_TO_SPEAKER.get(character, 2)
+    speaker = CHARACTER_CONFIG[character]['speaker_id']
     speed_scale = 1.4 if character == "ずんだもん" else 1.3
     generate_voice(text, speaker=speaker, output_file=output_file, speed_scale=speed_scale)
 
@@ -119,7 +111,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.char1 not in CHARACTER_TO_SPEAKER or args.char2 not in CHARACTER_TO_SPEAKER:
+    if args.char1 not in CHARACTER_CONFIG or args.char2 not in CHARACTER_CONFIG:
         print("指定されたキャラクターが存在しません。デフォルトのキャラクターを使用します。")
         args.char1 = "ずんだもん"
         args.char2 = "四国めたん"

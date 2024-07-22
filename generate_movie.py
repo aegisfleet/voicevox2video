@@ -1,9 +1,10 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip, vfx
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Any
 import os
 import unicodedata
+import json
 
 FONT_PATHS = [
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
@@ -12,19 +13,11 @@ FONT_PATHS = [
     "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf"
 ]
 
-CHARACTER_COLORS = {
-    "四国めたん": (255, 0, 240),
-    "ずんだもん": (0, 255, 0),
-    "春日部つむぎ": (255, 165, 0),
-    "雨晴はう": (0, 191, 255),
-    "波音リツ": (255, 0, 0),
-    "玄野武宏": (0, 0, 255),
-    "白上虎太郎": (255, 215, 0),
-    "青山龍星": (138, 43, 226),
-    "冥鳴ひまり": (75, 0, 130),
-    "もち子さん": (255, 192, 203),
-    "剣崎雌雄": (0, 128, 0),
-}
+def load_character_data(json_file: str = "config/characters.json") -> dict:
+    with open(json_file, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+CHARACTER_DATA = load_character_data()
 
 def find_font() -> str:
     for font_path in FONT_PATHS:
@@ -33,7 +26,17 @@ def find_font() -> str:
     raise FileNotFoundError("適切な日本語フォントが見つかりません。システムに日本語フォントがインストールされているか確認してください。")
 
 def get_character_color(character: str) -> Tuple[int, int, int]:
-    return CHARACTER_COLORS.get(character, (255, 255, 255))
+    color_data: Any = CHARACTER_DATA.get(character, {}).get("color", [255, 255, 255])
+    
+    if not isinstance(color_data, list) or len(color_data) < 3:
+        print(f"Warning: Invalid color data for character {character}. Using default color.")
+        return (255, 255, 255)
+    
+    try:
+        return (int(color_data[0]), int(color_data[1]), int(color_data[2]))
+    except ValueError:
+        print(f"Warning: Invalid color values for character {character}. Using default color.")
+        return (255, 255, 255)
 
 def is_fullwidth(char: str) -> bool:
     return unicodedata.east_asian_width(char) in 'WF'
