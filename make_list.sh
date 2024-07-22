@@ -9,7 +9,7 @@ is_binary_file() {
   local file_output
   file_output=$(file "$file")
   
-  if [[ "$file_output" == *"text"* ]]; then
+  if [[ "$file_output" == *"text"* ]] || [[ "$file_output" == *"JSON data"* ]]; then
     return 1
   else
     return 0
