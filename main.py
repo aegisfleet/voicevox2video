@@ -110,13 +110,13 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
 def main():
     if len(sys.argv) < 2:
-        print("使用方法: python main.py <URL or file> [character1] [character2] [is_long] [is_vertical]")
+        print("使用方法: python main.py <URL or file> [character1] [character2] [mode] [is_vertical]")
         sys.exit(1)
 
     url_or_file = sys.argv[1]
     char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
     char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
-    is_long = sys.argv[4] == "1" if len(sys.argv) > 4 else False
+    mode = int(sys.argv[4]) if len(sys.argv) > 4 else 1
     is_vertical = sys.argv[5] == "1" if len(sys.argv) > 5 else False
 
     if char1 not in CHARACTER_TO_SPEAKER or char2 not in CHARACTER_TO_SPEAKER:
@@ -128,10 +128,10 @@ def main():
     print(f"URL/ファイル: {url_or_file}")
     print(f"キャラクター1: {char1}")
     print(f"キャラクター2: {char2}")
-    print(f"長い対話: {'はい' if is_long else 'いいえ'}")
+    print(f"長い対話: {'はい' if mode in [2, 4] else 'いいえ'}")
     print(f"縦型動画: {'はい' if is_vertical else 'いいえ'}")
 
-    dialogue = generate_scenario(url_or_file, char1, char2, is_long)
+    dialogue = generate_scenario(url_or_file, char1, char2, mode)
 
     output_dir = "tmp"
     if os.path.exists(output_dir):

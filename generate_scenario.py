@@ -132,15 +132,6 @@ def extract_github_readme(url: str) -> str:
         return '\n'.join(lines)
     return ""
 
-def summarize_content(content: str, length: int = 5000) -> str:
-    soup = BeautifulSoup(content, 'html.parser')
-    main_content = []
-    for tag in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']):
-        if tag.get_text(strip=True):
-            main_content.append(tag.get_text(strip=True))
-    text = "\n".join(main_content)
-    return text[:length]
-
 def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
     return character_interactions.get((char1, char2), (char2, char2))
 
@@ -149,7 +140,7 @@ def correct_spelling(text: str) -> str:
         text = re.sub(misspelling, correction, text, flags=re.IGNORECASE)
     return text
 
-def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
+def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
     for retry in range(3):
         try:
             chat_session = model.start_chat(history=[])
@@ -186,10 +177,9 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
             ### 会話に使用する話題
             {content[:5000]}
 
-            これらの設定と使用する話題に基づいて、話題に対する深い考察を行いながら自然で面白い対話を生成してください。
-            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内とする。
-            2人のキャラクターにより「{char1}」が質問して「{char2}」が回答する形を取ってください。
-            {"対話は特に制限を設けず可能な限り長いシナリオを作成してください。" if is_long else "会話は合計8つ制限してください。"}
+            これらの設定と会話に使用する話題に基づいて、{"話題に対する深い考察を行いながら自然で面白い" if mode in [1, 2] else "話題の内容を正確に説明するための"}対話を生成してください。
+            なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、各発言は400文字以内とします。
+            {"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
             """
             print(prompt)
 
@@ -209,18 +199,18 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
                 raise
     return []
 
-def generate_scenario(url_or_file: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
+def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
         if "github.com" in url_or_file:
             content = extract_github_readme(url_or_file)
         else:
             content = scrape_website(url_or_file)
-        dialogue = generate_dialogue(content, char1, char2, is_long)
+        dialogue = generate_dialogue(content, char1, char2, mode)
     else:
         print(f"Loading dialogue from file: {url_or_file}")
         dialogue = load_dialogue(url_or_file)
-    
+
     dialogue = [(speaker, text) for speaker, text in dialogue]
 
     print("生成された対話:")
@@ -247,16 +237,16 @@ def save_dialogue(dialogue: List[Tuple[str, str]], file_path: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("使用方法: python script.py <URL or file> [character1] [character2] [is_long]")
+        print("使用方法: python script.py <URL or file> [character1] [character2] [mode]")
         sys.exit(1)
 
     url_or_file = sys.argv[1]
     char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
     char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
-    is_long = sys.argv[4] == "1" if len(sys.argv) > 4 else False
+    mode = int(sys.argv[4]) if len(sys.argv) > 4 else 1
 
     if char1 not in characters or char2 not in characters:
         print("指定されたキャラクターが存在しません。")
         sys.exit(1)
 
-    dialogue = generate_scenario(url_or_file, char1, char2, is_long)
+    dialogue = generate_scenario(url_or_file, char1, char2, mode)
