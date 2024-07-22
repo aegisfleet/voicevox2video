@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Tuple
@@ -6,80 +7,19 @@ import google.generativeai as genai
 import sys
 import re
 
+def load_json_config(filename):
+    config_path = os.path.join('config', filename)
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+characters = load_json_config('characters.json')
+character_interactions = load_json_config('character_interactions.json')
+
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
 )
-
-# TODO: 後で見直す
-characters = {
-    "四国めたん": {
-        "first_person": "わたくし",
-        "personality": "高等部二年生の女の子。常に金欠。趣味は中二病妄想。誰にでも遠慮せず、若干ツンデレ気味。",
-        "speech_style": "基本的にタメ口",
-    },
-    "ずんだもん": {
-        "first_person": "僕",
-        "personality": "ずんだ餅の精。やや不幸属性が備わっており、ないがしろにされることもしばしば。趣味はその辺をふらふらすること、自分を大きく見せること。",
-        "speech_style": "語尾に必ず「～のだ」「～なのだ」をつけて喋る",
-    },
-    "春日部つむぎ": {
-        "first_person": "あーし",
-        "personality": "埼玉県内の高校に通うギャルの女の子。やんちゃに見えて実は真面目な一面もある。",
-        "speech_style": "丁寧語を使用",
-    },
-    "雨晴はう": {
-        "first_person": "僕",
-        "personality": "現役看護師です！看護師のあれこれお伝えします！",
-        "speech_style": "元気で明るい口調",
-    },
-    "波音リツ": {
-        "first_person": "あたし",
-        "personality": "クール。論理的で冷静な性格。",
-        "speech_style": "簡潔で冷静な話し方",
-    },
-    "玄野武宏": {
-        "first_person": "俺",
-        "personality": "サッパリした青年。やや短気だが面倒見は良い。熱血漢。正義感が強く、情熱的。",
-        "speech_style": "力強く、熱意のこもった話し方",
-    },
-    "白上虎太郎": {
-        "first_person": "おれ",
-        "personality": "まっすぐで人懐っこい青年。愛嬌はあるものの少しおばか。",
-        "speech_style": "元気で明るい口調",
-    },
-    "青山龍星": {
-        "first_person": "オレ",
-        "personality": "とにかく大柄で無骨な青年。寡黙で冷静なストッパー枠。",
-        "speech_style": "自信に満ちた、少し尊大な話し方",
-    },
-    "冥鳴ひまり": {
-        "first_person": "私",
-        "personality": "冥界から来た死神。可愛いものに目がない。ミステリアスな少女。",
-        "speech_style": "優しくて清楚な話し方",
-    },
-    "もち子さん": {
-        "first_person": "もち子",
-        "personality": "福島県生まれのプラモ好き犬系ヲタ娘。",
-        "speech_style": "穏やかで優しい話し方",
-    },
-    "剣崎雌雄": {
-        "first_person": "僕",
-        "personality": "人類滅亡を目論む医療用メスの付喪神。",
-        "speech_style": "分析的で冷静な話し方",
-    },
-}
-
-# TODO: 後で増やす
-character_interactions = {
-    ("四国めたん", "ずんだもん"): ("めたん", "ずんだもん"),
-    ("ずんだもん", "四国めたん"): ("ずんだもん", "めたん"),
-    ("春日部つむぎ", "ずんだもん"): ("つむぎ", "ずんだもん先輩"),
-    ("ずんだもん", "春日部つむぎ"): ("ずんだもん先輩", "つむぎ"),
-    ("春日部つむぎ", "四国めたん"): ("つむぎさん", "めたん先輩"),
-    ("四国めたん", "春日部つむぎ"): ("めたん先輩", "つむぎさん"),
-}
 
 spelling_corrections = {
     "メタん": "めたん",
@@ -133,7 +73,8 @@ def extract_github_readme(url: str) -> str:
     return ""
 
 def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
-    return character_interactions.get((char1, char2), (char2, char2))
+    key = f"{char1},{char2}"
+    return character_interactions.get(key, (char2, char2))
 
 def correct_spelling(text: str) -> str:
     for misspelling, correction in spelling_corrections.items():
