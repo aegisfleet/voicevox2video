@@ -1,15 +1,87 @@
 import os
 import requests
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
 from typing import List, Tuple
 import google.generativeai as genai
-import re
+import sys
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 model = genai.GenerativeModel(
     model_name="gemini-1.5-flash",
 )
+
+# TODO: 後で見直す
+characters = {
+    "四国めたん": {
+        "first_person": "わたくし",
+        "personality": "高等部二年生の女の子。常に金欠。趣味は中二病妄想。誰にでも遠慮せず、若干ツンデレ気味。",
+        "speech_style": "基本的にタメ口",
+    },
+    "ずんだもん": {
+        "first_person": "僕",
+        "personality": "ずんだ餅の精。やや不幸属性が備わっており、ないがしろにされることもしばしば。趣味はその辺をふらふらすること、自分を大きく見せること。",
+        "speech_style": "語尾に必ず「～のだ」「～なのだ」をつけて喋る",
+    },
+    "春日部つむぎ": {
+        "first_person": "あーし",
+        "personality": "埼玉県内の高校に通うギャルの女の子。やんちゃに見えて実は真面目な一面もある。",
+        "speech_style": "丁寧語を使用",
+    },
+    "雨晴はう": {
+        "first_person": "僕",
+        "personality": "現役看護師です！看護師のあれこれお伝えします！",
+        "speech_style": "元気で明るい口調",
+    },
+    "波音リツ": {
+        "first_person": "あたし",
+        "personality": "クール。論理的で冷静な性格。",
+        "speech_style": "簡潔で冷静な話し方",
+    },
+    "玄野武宏": {
+        "first_person": "俺",
+        "personality": "サッパリした青年。やや短気だが面倒見は良い。熱血漢。正義感が強く、情熱的。",
+        "speech_style": "力強く、熱意のこもった話し方",
+    },
+    "白上虎太郎": {
+        "first_person": "おれ",
+        "personality": "まっすぐで人懐っこい青年。愛嬌はあるものの少しおばか。",
+        "speech_style": "元気で明るい口調",
+    },
+    "青山龍星": {
+        "first_person": "オレ",
+        "personality": "とにかく大柄で無骨な青年。寡黙で冷静なストッパー枠。",
+        "speech_style": "自信に満ちた、少し尊大な話し方",
+    },
+    "冥鳴ひまり": {
+        "first_person": "私",
+        "personality": "冥界から来た死神。可愛いものに目がない。ミステリアスな少女。",
+        "speech_style": "優しくて清楚な話し方",
+    },
+    "もち子さん": {
+        "first_person": "もち子",
+        "personality": "福島県生まれのプラモ好き犬系ヲタ娘。",
+        "speech_style": "穏やかで優しい話し方",
+    },
+    "剣崎雌雄": {
+        "first_person": "僕",
+        "personality": "人類滅亡を目論む医療用メスの付喪神。",
+        "speech_style": "分析的で冷静な話し方",
+    },
+}
+
+# TODO: 後で増やす
+character_interactions = {
+    ("四国めたん", "ずんだもん"): ("めたん", "ずんだもん"),
+    ("ずんだもん", "四国めたん"): ("ずんだもん", "めたん"),
+    ("春日部つむぎ", "ずんだもん"): ("つむぎ", "ずんだもん先輩"),
+    ("ずんだもん", "春日部つむぎ"): ("ずんだもん先輩", "つむぎ"),
+    ("春日部つむぎ", "四国めたん"): ("つむぎさん", "めたん先輩"),
+    ("四国めたん", "春日部つむぎ"): ("めたん先輩", "つむぎさん"),
+}
+
+def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
+    return character_interactions.get((char1, char2), (char2, char2))
 
 def scrape_website(url: str) -> str:
     response = requests.get(url)
@@ -64,48 +136,48 @@ def summarize_content(content: str, length: int = 5000) -> str:
     text = "\n".join(main_content)
     return text[:length]
 
-def generate_dialogue(content: str) -> List[Tuple[str, str]]:
+def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
     for retry in range(3):
         try:
             chat_session = model.start_chat(history=[])
-            print(content[:5000])
+
+            char1_call, char2_call = get_character_interaction(char1, char2)
 
             prompt = f"""
-            以下の内容に基づいて、2人のキャラクターにより「ずんだもん」が質問して「四国めたん」が質問に回答する対話を生成してください。
-            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、合計8つの発言にしてください。
-            対話の形式は以下のようにしてください：
-            ずんだもん: [ずんだもんの発言]
-            四国めたん: [四国めたんの発言]
-            ずんだもん: [ずんだもんの発言]
-            四国めたん: [四国めたんの発言]
-            ずんだもん: [ずんだもんの発言]
-            四国めたん: [四国めたんの発言]
-            ずんだもん: [ずんだもんの発言]
-            四国めたん: [四国めたんの発言]
+            以下の内容に基づいて、2人のキャラクターにより「{char1}」が質問して「{char2}」が質問に回答する対話を生成してください。
+            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、{"特に制限を設けず議論を続けて欲しい。" if is_long else "合計8つの発言にしてください。"}
+            対話の出力形式は以下のようにしてください：
+            ...
+            {char1}: [{char1}の発言]
+            {char2}: [{char2}の発言]
+            {char1}: [{char1}の発言]
+            {char2}: [{char2}の発言]
+            {char1}: [{char1}の発言]
+            {char2}: [{char2}の発言]
+            {char1}: [{char1}の発言]
+            {char2}: [{char2}の発言]
+            ...
 
             ### キャラクター設定
 
-            ずんだもん:
-            - ずんだ餅の精。第一人称はボクまたはずんだもん
-            - やや不幸属性が備わっており、ないがしろにされることもしばしば
-            - 趣味はその辺をふらふらすること、自分を大きく見せること
-            - 口調：不自然な日本語にならない限り、語尾に必ず「～のだ」「～なのだ」をつけて喋る
-            - 相手のことを「めたん」と呼ぶ
-            - あまり知識がないが好奇心旺盛
+            {char1}:
+            - 第一人称は「{characters[char1]['first_person']}」
+            - {characters[char1]['personality']}
+            - 口調：{characters[char1]['speech_style']}
+            - 相手のことを「{char2_call}」と呼ぶ
 
-            四国めたん:
-            - 高等部二年生の女の子。第一人称はわたくし
-            - 常に金欠。趣味は中二病妄想
-            - 誰にでも遠慮せず、若干ツンデレ気味
-            - 口調：基本的にタメ口
-            - 相手のことを「ずんだもん」と呼ぶ
-            - 色々なことを知っている
+            {char2}:
+            - 第一人称は「{characters[char2]['first_person']}」
+            - {characters[char2]['personality']}
+            - 口調：{characters[char2]['speech_style']}
+            - 相手のことを「{char1_call}」と呼ぶ
 
             ### 会話に使用する話題
             {content[:5000]}
 
             これらの設定と使用する話題に基づいて、話題に対する深い考察を行いながら自然で面白い対話を生成してください。
             """
+            print(prompt)
 
             response = chat_session.send_message(prompt)
 
@@ -122,25 +194,25 @@ def generate_dialogue(content: str) -> List[Tuple[str, str]]:
                 raise
     return []
 
-def replace_metan(text: str) -> str:
-    text = re.sub(r'メタん', 'めたん', text)
-    text = re.sub(r'メタン', 'めたん', text)
-    text = re.sub(r'なのだな？', 'なのだ？', text)
+def replace_character_names(text: str, char1: str, char2: str) -> str:
+    char1_call, char2_call = get_character_interaction(char1, char2)
+    text = text.replace(char2, char2_call)
+    text = text.replace(char1, char1_call)
     return text
 
-def generate_scenario(url_or_file: str) -> List[Tuple[str, str]]:
+def generate_scenario(url_or_file: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
         if "github.com" in url_or_file:
             content = extract_github_readme(url_or_file)
         else:
             content = scrape_website(url_or_file)
-        dialogue = generate_dialogue(content)
+        dialogue = generate_dialogue(content, char1, char2, is_long)
     else:
         print(f"Loading dialogue from file: {url_or_file}")
         dialogue = load_dialogue(url_or_file)
     
-    dialogue = [(speaker, replace_metan(text)) for speaker, text in dialogue]
+    dialogue = [(speaker, replace_character_names(text, char1, char2)) for speaker, text in dialogue]
 
     print("生成された対話:")
     for speaker, text in dialogue:
@@ -165,9 +237,17 @@ def save_dialogue(dialogue: List[Tuple[str, str]], file_path: str) -> None:
             f.write(f"{speaker}: {text}\n")
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1:
-        url_or_file = sys.argv[1]
-        dialogue = generate_scenario(url_or_file)
-    else:
-        print("URLまたはファイルパスを指定してください。")
+    if len(sys.argv) < 4:
+        print("使用方法: python script.py <URL or file> <character1> <character2> [is_long]")
+        sys.exit(1)
+
+    url_or_file = sys.argv[1]
+    char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
+    char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
+    is_long = sys.argv[4] == "1" if len(sys.argv) > 4 else False
+
+    if char1 not in characters or char2 not in characters:
+        print("指定されたキャラクターが存在しません。")
+        sys.exit(1)
+
+    dialogue = generate_scenario(url_or_file, char1, char2, is_long)

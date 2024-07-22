@@ -109,22 +109,41 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k")
 
 def main():
-    if len(sys.argv) > 1:
-        url_or_file = sys.argv[1]
-        dialogue = generate_scenario(url_or_file)
-    else:
-        print("No URL or file provided. Using default dialogue generation.")
-        dialogue = generate_scenario("")
-    is_vertical = len(sys.argv) > 2 and sys.argv[2] == "1"
+    if len(sys.argv) < 2:
+        print("使用方法: python main.py <URL or file> [character1] [character2] [is_long] [is_vertical]")
+        sys.exit(1)
+
+    url_or_file = sys.argv[1]
+    char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
+    char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
+    is_long = sys.argv[4] == "1" if len(sys.argv) > 4 else False
+    is_vertical = sys.argv[5] == "1" if len(sys.argv) > 5 else False
+
+    if char1 not in CHARACTER_TO_SPEAKER or char2 not in CHARACTER_TO_SPEAKER:
+        print("指定されたキャラクターが存在しません。デフォルトのキャラクターを使用します。")
+        char1 = "ずんだもん"
+        char2 = "四国めたん"
+
+    print(f"使用するパラメータ:")
+    print(f"URL/ファイル: {url_or_file}")
+    print(f"キャラクター1: {char1}")
+    print(f"キャラクター2: {char2}")
+    print(f"長い対話: {'はい' if is_long else 'いいえ'}")
+    print(f"縦型動画: {'はい' if is_vertical else 'いいえ'}")
+
+    dialogue = generate_scenario(url_or_file, char1, char2, is_long)
+
     output_dir = "tmp"
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir, exist_ok=True)
+
     audio_files = create_dialogue_audio(dialogue, output_dir)
     video_files = create_dialogue_video(dialogue, audio_files, output_dir, is_vertical)
     final_output = "output/final_dialogue_output.mp4"
     bgm_file = "./bgm/のんきな日常.mp3"
     combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, is_vertical)
+
     for file in audio_files + video_files:
         os.remove(file)
     os.rmdir(output_dir)
