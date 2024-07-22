@@ -9,16 +9,20 @@ https://github.com/user-attachments/assets/5b911c2f-d432-4906-9e6a-c54130f01904
 - ウェブサイトやGitHubリポジトリからのコンテンツスクレイピング
 - テキストファイルからの対話読み込み
 - Google Gemini AIを使用した対話生成
+  - 長さの異なる対話（短い/長い）の生成
 - VOICEVOXによる音声合成
+  - 複数のキャラクターの対話生成
 - 字幕付き動画の生成（横動画・縦動画に対応）
+  - 動画へのBGM追加
+  - テロップのアニメーション効果
 
 ## セットアップ
 
 1. リポジトリをクローンします：
 
    ```bash
-   git clone [your-repo-url]
-   cd [your-repo-name]
+   git clone https://github.com/aegisfleet/voicevox2video.git
+   cd voicevox2video
    ```
 
 2. 必要な依存関係をインストールします：
@@ -60,40 +64,41 @@ https://github.com/user-attachments/assets/5b911c2f-d432-4906-9e6a-c54130f01904
 
 ## 使用方法
 
-スクリプトの実行時に、第二引数として「1」を指定すると縦動画が生成されます。指定しない場合は横動画が生成されます。
+スクリプトの実行時に、以下のパラメータを指定できます：
 
-1. URLを指定して実行：
+- 第1引数: URL、GitHubリポジトリ、またはテキストファイルのパス
+- 第2引数: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
+- 第3引数: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
+- 第4引数: 長い対話を生成する場合は "1"、そうでない場合は省略または他の値
+- 第5引数: 縦動画を生成する場合は "1"、そうでない場合は省略または他の値
+
+例：
+
+1. URLを指定して実行（横動画、短い対話）：
 
    ```bash
-   python3 main.py https://example.com [1]
+   python3 main.py https://example.com
    ```
 
-2. GitHubリポジトリのURLを指定して実行：
+2. GitHubリポジトリのURLを指定して実行（縦動画、長い対話）：
 
    ```bash
-   python3 main.py https://github.com/username/repository [1]
+   python3 main.py https://github.com/username/repository ずんだもん 四国めたん 1 1
    ```
 
-3. テキストファイルを指定して実行：
+3. テキストファイルを指定して実行（横動画、短い対話、カスタムキャラクター）：
 
    ```bash
-   python3 main.py path/to/your/dialogue.txt [1]
+   python3 main.py path/to/your/dialogue.txt 春日部つむぎ 四国めたん
    ```
 
    テキストファイルの形式：
 
    ```text
-   ずんだもん: [ずんだもんの発言]
-   四国めたん: [四国めたんの発言]
-   ずんだもん: [ずんだもんの発言]
-   四国めたん: [四国めたんの発言]
-   ...
-   ```
-
-4. デフォルトのダイアログ生成を使用：
-
-   ```bash
-   python3 main.py [1]
+   キャラクター1: [キャラクター1の発言]
+   キャラクター2: [キャラクター2の発言]
+   キャラクター1: [キャラクター1の発言]
+   キャラクター2: [キャラクター2の発言]
    ```
 
 ### 対話シナリオの生成
@@ -122,6 +127,11 @@ graph TD
     G --> H[BGM追加]
     H --> I[最終動画出力]
 ```
+
+## 新機能
+
+1. **複数キャラクターのサポート**: 11種類のVOICEVOXキャラクターから選択可能になりました。
+2. **対話の長さ制御**: 短い対話と長い対話を生成できるようになりました。
 
 ## ライセンス
 
