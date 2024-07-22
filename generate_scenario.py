@@ -237,8 +237,8 @@ def save_dialogue(dialogue: List[Tuple[str, str]], file_path: str) -> None:
             f.write(f"{speaker}: {text}\n")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("使用方法: python script.py <URL or file> <character1> <character2> [is_long]")
+    if len(sys.argv) < 2:
+        print("使用方法: python script.py <URL or file> [character1] [character2] [is_long]")
         sys.exit(1)
 
     url_or_file = sys.argv[1]
