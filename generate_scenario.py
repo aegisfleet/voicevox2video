@@ -85,6 +85,7 @@ spelling_corrections = {
     "メタん": "めたん",
     "メタン": "めたん",
     "ずんだモン": "ずんだもん",
+    "なのだな？": "なのだ？",
 }
 
 def scrape_website(url: str) -> str:
@@ -156,8 +157,6 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
             char1_call, char2_call = get_character_interaction(char1, char2)
 
             prompt = f"""
-            以下の内容に基づいて、2人のキャラクターにより「{char1}」が質問して「{char2}」が質問に回答する対話を生成してください。
-            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内で、{"特に制限を設けず議論を続けて欲しい。" if is_long else "合計8つの発言にしてください。"}
             対話の出力形式は以下のようにしてください：
             ...
             {char1}: [{char1}の発言]
@@ -188,6 +187,9 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
             {content[:5000]}
 
             これらの設定と使用する話題に基づいて、話題に対する深い考察を行いながら自然で面白い対話を生成してください。
+            対話は「会話に使用する話題」を要約する形で生成し、各発言は400文字以内とする。
+            2人のキャラクターにより「{char1}」が質問して「{char2}」が回答する形を取ってください。
+            {"対話は特に制限を設けず可能な限り長いシナリオを作成してください。" if is_long else "会話は合計8つ制限してください。"}
             """
             print(prompt)
 
@@ -207,12 +209,6 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
                 raise
     return []
 
-def replace_character_names(text: str, char1: str, char2: str) -> str:
-    char1_call, char2_call = get_character_interaction(char1, char2)
-    text = text.replace(char2, char2_call)
-    text = text.replace(char1, char1_call)
-    return text
-
 def generate_scenario(url_or_file: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
@@ -225,7 +221,7 @@ def generate_scenario(url_or_file: str, char1: str, char2: str, is_long: bool) -
         print(f"Loading dialogue from file: {url_or_file}")
         dialogue = load_dialogue(url_or_file)
     
-    dialogue = [(speaker, replace_character_names(text, char1, char2)) for speaker, text in dialogue]
+    dialogue = [(speaker, text) for speaker, text in dialogue]
 
     print("生成された対話:")
     for speaker, text in dialogue:
