@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from typing import List, Tuple
 import google.generativeai as genai
 import sys
+import re
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -80,8 +81,11 @@ character_interactions = {
     ("四国めたん", "春日部つむぎ"): ("めたん先輩", "つむぎさん"),
 }
 
-def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
-    return character_interactions.get((char1, char2), (char2, char2))
+spelling_corrections = {
+    "メタん": "めたん",
+    "メタン": "めたん",
+    "ずんだモン": "ずんだもん",
+}
 
 def scrape_website(url: str) -> str:
     response = requests.get(url)
@@ -136,6 +140,14 @@ def summarize_content(content: str, length: int = 5000) -> str:
     text = "\n".join(main_content)
     return text[:length]
 
+def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
+    return character_interactions.get((char1, char2), (char2, char2))
+
+def correct_spelling(text: str) -> str:
+    for misspelling, correction in spelling_corrections.items():
+        text = re.sub(misspelling, correction, text, flags=re.IGNORECASE)
+    return text
+
 def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> List[Tuple[str, str]]:
     for retry in range(3):
         try:
@@ -184,7 +196,8 @@ def generate_dialogue(content: str, char1: str, char2: str, is_long: bool) -> Li
             dialogue = []
             for line in response.text.strip().split('\n'):
                 speaker, text = line.split(':', 1)
-                dialogue.append((speaker, text.strip()))
+                corrected_text = correct_spelling(text.strip())
+                dialogue.append((speaker, corrected_text))
 
             return dialogue
         except ValueError as e:
