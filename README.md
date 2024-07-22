@@ -64,13 +64,19 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 
 ## 使用方法
 
-スクリプトの実行時に、以下のパラメータを指定できます：
+### main.py の実行
 
-- 第1引数: URL、GitHubリポジトリ、またはテキストファイルのパス
-- 第2引数: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
-- 第3引数: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
-- 第4引数: 対話内容のモード（省略可能、デフォルト: 1）
-- 第5引数: 横動画を生成する場合は "0"、縦動画は "1"（省略可能、デフォルト: 0）
+スクリプトの実行時に、以下の引数を指定できます：
+
+```bash
+python3 main.py [url_or_file] [--char1 CHARACTER1] [--char2 CHARACTER2] [--mode MODE] [--vertical]
+```
+
+- `url_or_file`: URL、GitHubリポジトリ、またはテキストファイルのパス（必須）
+- `--char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
+- `--char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
+- `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
+- `--vertical`: 縦動画を生成する場合に指定（省略可能）
 
 ### 入力可能なキャラクター名
 
@@ -106,7 +112,7 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 2. GitHubリポジトリのURLを指定して実行（カスタムキャラクター、長い対話、縦動画）：
 
    ```bash
-   python3 main.py https://github.com/username/repository ずんだもん 春日部つむぎ 2 1
+   python3 main.py https://github.com/username/repository --char1 ずんだもん --char2 春日部つむぎ --mode 2 --vertical
    ```
 
 3. テキストファイルを指定して実行（横動画）：
@@ -124,12 +130,23 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
    キャラクター2: [キャラクター2の発言]
    ```
 
-### 対話シナリオの生成
+### 対話シナリオの生成（generate_scenario.py）
 
 generate_scenario.pyを直接実行することで、対話のシナリオのみを生成することができます。
 
 ```bash
-python3 generate_scenario.py [URL]
+python3 generate_scenario.py [url_or_file] [char1] [char2] [mode]
+```
+
+- `url_or_file`: URL、GitHubリポジトリ、またはテキストファイルのパス（必須）
+- `char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
+- `char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
+- `mode`: 対話内容のモード（省略可能、デフォルト: 1）
+
+例：
+
+```bash
+python3 generate_scenario.py https://example.com ずんだもん 春日部つむぎ 2
 ```
 
 これにより、指定されたURLの内容に基づいて対話シナリオが生成され、`output/generated_dialogue.txt`にファイル出力されます。生成されたファイルは、main.pyの引数に指定して使用できます。

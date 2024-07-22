@@ -1,3 +1,4 @@
+import argparse
 import os
 import shutil
 import sys
@@ -109,29 +110,28 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k")
 
 def main():
-    if len(sys.argv) < 2:
-        print("使用方法: python main.py <URL or file> [character1] [character2] [mode] [is_vertical]")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
+    parser.add_argument("url_or_file", help="URLまたはファイルパス")
+    parser.add_argument("--char1", default="ずんだもん", help="キャラクター1 (デフォルト: ずんだもん)")
+    parser.add_argument("--char2", default="四国めたん", help="キャラクター2 (デフォルト: 四国めたん)")
+    parser.add_argument("--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
+    parser.add_argument("--vertical", action="store_true", help="縦型動画を生成")
 
-    url_or_file = sys.argv[1]
-    char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
-    char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
-    mode = int(sys.argv[4]) if len(sys.argv) > 4 else 1
-    is_vertical = sys.argv[5] == "1" if len(sys.argv) > 5 else False
+    args = parser.parse_args()
 
-    if char1 not in CHARACTER_TO_SPEAKER or char2 not in CHARACTER_TO_SPEAKER:
+    if args.char1 not in CHARACTER_TO_SPEAKER or args.char2 not in CHARACTER_TO_SPEAKER:
         print("指定されたキャラクターが存在しません。デフォルトのキャラクターを使用します。")
-        char1 = "ずんだもん"
-        char2 = "四国めたん"
+        args.char1 = "ずんだもん"
+        args.char2 = "四国めたん"
 
     print(f"使用するパラメータ:")
-    print(f"URL/ファイル: {url_or_file}")
-    print(f"キャラクター1: {char1}")
-    print(f"キャラクター2: {char2}")
-    print(f"長い対話: {'はい' if mode in [2, 4] else 'いいえ'}")
-    print(f"縦型動画: {'はい' if is_vertical else 'いいえ'}")
+    print(f"URL/ファイル: {args.url_or_file}")
+    print(f"キャラクター1: {args.char1}")
+    print(f"キャラクター2: {args.char2}")
+    print(f"長い対話: {'はい' if args.mode in [2, 4] else 'いいえ'}")
+    print(f"縦型動画: {'はい' if args.vertical else 'いいえ'}")
 
-    dialogue = generate_scenario(url_or_file, char1, char2, mode)
+    dialogue = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
 
     output_dir = "tmp"
     if os.path.exists(output_dir):
@@ -139,10 +139,10 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
-    video_files = create_dialogue_video(dialogue, audio_files, output_dir, is_vertical)
+    video_files = create_dialogue_video(dialogue, audio_files, output_dir, args.vertical)
     final_output = "output/final_dialogue_output.mp4"
     bgm_file = "./bgm/のんきな日常.mp3"
-    combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, is_vertical)
+    combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, args.vertical)
 
     for file in audio_files + video_files:
         os.remove(file)
