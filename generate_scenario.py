@@ -138,15 +138,20 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
             なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、各発言は400文字以内とします。
             {"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
             """
-            print(prompt)
+            if retry==0:
+                print(prompt)
 
             response = chat_session.send_message(prompt)
 
             dialogue = []
             for line in response.text.strip().split('\n'):
-                speaker, text = line.split(':', 1)
-                corrected_text = correct_spelling(text.strip())
-                dialogue.append((speaker, corrected_text))
+                line = line.strip()
+                if line and ':' in line:
+                    parts = line.split(':', 1)
+                    if len(parts) == 2:
+                        speaker, text = parts
+                        corrected_text = correct_spelling(text.strip())
+                        dialogue.append((speaker.strip(), corrected_text))
 
             return dialogue
         except ValueError as e:
