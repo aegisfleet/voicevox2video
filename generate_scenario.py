@@ -62,8 +62,18 @@ def extract_github_readme(url: str) -> str:
     if response.status_code == 200:
         soup = BeautifulSoup(response.text, 'html.parser')
         text = soup.get_text()
-        lines = [line.strip() for line in text.split('\n') if line.strip()]
-        return '\n'.join(lines)
+
+        lines = [line.strip() for line in text.split('\n')]
+
+        inside_code_block = False
+        filtered_lines = []
+        for line in lines:
+            if line.startswith('```'):
+                inside_code_block = not inside_code_block
+            elif not inside_code_block and line:
+                filtered_lines.append(line)
+
+        return '\n'.join(filtered_lines)
     return ""
 
 def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
