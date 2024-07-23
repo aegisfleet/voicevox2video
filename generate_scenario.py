@@ -105,38 +105,38 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
             char1_call, char2_call = get_character_interaction(char1, char2)
 
             prompt = f"""
-            対話の出力形式は以下のようにしてください：
-            ...
-            {char1}: [{char1}の発言]
-            {char2}: [{char2}の発言]
-            {char1}: [{char1}の発言]
-            {char2}: [{char2}の発言]
-            {char1}: [{char1}の発言]
-            {char2}: [{char2}の発言]
-            {char1}: [{char1}の発言]
-            {char2}: [{char2}の発言]
-            ...
+キャラクターの設定と会話に使用する話題に基づいて、{"話題に対する深い考察を行いながら自然で面白い" if mode in [1, 2] else "話題の内容を正確に説明するための"}対話を生成してください。
+なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、各発言は400文字以内とします。
+{"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
 
-            ### キャラクター設定
+対話の出力形式は以下のようにしてください：
+...
+{char1}: [{char1}の発言]
+{char2}: [{char2}の発言]
+{char1}: [{char1}の発言]
+{char2}: [{char2}の発言]
+{char1}: [{char1}の発言]
+{char2}: [{char2}の発言]
+{char1}: [{char1}の発言]
+{char2}: [{char2}の発言]
+...
 
-            {char1}:
-            - 第一人称は「{characters[char1]['first_person']}」
-            - {characters[char1]['personality']}
-            - 口調：{characters[char1]['speech_style']}
-            - 相手のことを「{char2_call}」と呼ぶ
+### キャラクター設定
 
-            {char2}:
-            - 第一人称は「{characters[char2]['first_person']}」
-            - {characters[char2]['personality']}
-            - 口調：{characters[char2]['speech_style']}
-            - 相手のことを「{char1_call}」と呼ぶ
+{char1}:
+- 第一人称は「{characters[char1]['first_person']}」
+- {characters[char1]['personality']}
+- 口調：{characters[char1]['speech_style']}
+- 相手のことを「{char2_call}」と呼ぶ
 
-            ### 会話に使用する話題
-            {content[:5000]}
+{char2}:
+- 第一人称は「{characters[char2]['first_person']}」
+- {characters[char2]['personality']}
+- 口調：{characters[char2]['speech_style']}
+- 相手のことを「{char1_call}」と呼ぶ
 
-            これらの設定と会話に使用する話題に基づいて、{"話題に対する深い考察を行いながら自然で面白い" if mode in [1, 2] else "話題の内容を正確に説明するための"}対話を生成してください。
-            なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、各発言は400文字以内とします。
-            {"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
+### 会話に使用する話題
+{content[:5000]}
             """
             if retry==0:
                 print(prompt)
