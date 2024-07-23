@@ -144,21 +144,23 @@ python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v]
 generate_scenario.pyを直接実行することで、対話のシナリオのみを生成することができます。
 
 ```bash
-python3 generate_scenario.py [url_or_file] [char1] [char2] [mode]
+python3 generate_scenario.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE]
 ```
 
 - `url_or_file`: URL、GitHubリポジトリ、テキストファイル、または任意のテキストファイルのパス（必須）
-- `char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
-- `char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
-- `mode`: 対話内容のモード（省略可能、デフォルト: 1）
+- `-c1`, `--char1`: キャラクター1の名前（省略可能、ランダム選択）
+- `-c2`, `--char2`: キャラクター2の名前（省略可能、ランダム選択）
+- `-m`, `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
 
 例：
 
 ```bash
-python3 generate_scenario.py https://example.com ずんだもん 春日部つむぎ 2
+python3 generate_scenario.py https://example.com -c1 ずんだもん -c2 春日部つむぎ -m 2
 ```
 
 これにより、指定されたURLの内容に基づいて対話シナリオが生成され、`output/generated_dialogue.txt`にファイル出力されます。生成されたファイルは、main.pyの引数に指定して使用できます。
+
+キャラクターを指定しない場合、ランダムに選択されます。
 
 ## 処理の流れ
 

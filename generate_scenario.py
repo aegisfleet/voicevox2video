@@ -7,6 +7,8 @@ import google.generativeai as genai
 import sys
 import re
 import chardet
+import argparse
+import random
 
 def load_json_config(filename):
     config_path = os.path.join('config', filename)
@@ -194,12 +196,13 @@ def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> Li
 
     dialogue = [(speaker, text) for speaker, text in dialogue]
 
-    print("生成された対話:")
+    print("\n生成された対話:")
     for speaker, text in dialogue:
         print(f"{speaker}: {text}")
 
     dialogue_file = "output/generated_dialogue.txt"
     save_dialogue(dialogue, dialogue_file)
+    print(f"\n対話が保存されました: {dialogue_file}")
 
     return dialogue
 
@@ -216,18 +219,32 @@ def save_dialogue(dialogue: List[Tuple[str, str]], file_path: str) -> None:
         for speaker, text in dialogue:
             f.write(f"{speaker}: {text}\n")
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("使用方法: python script.py <URL or file> [character1] [character2] [mode]")
-        sys.exit(1)
+def main():
+    parser = argparse.ArgumentParser(description="対話シナリオ生成スクリプト")
+    parser.add_argument("url_or_file", help="URLまたはファイルパス")
+    parser.add_argument("-c1", "--char1", help="キャラクター1")
+    parser.add_argument("-c2", "--char2", help="キャラクター2")
+    parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
 
-    url_or_file = sys.argv[1]
-    char1 = sys.argv[2] if len(sys.argv) > 2 else "ずんだもん"
-    char2 = sys.argv[3] if len(sys.argv) > 3 else "四国めたん"
-    mode = int(sys.argv[4]) if len(sys.argv) > 4 else 1
+    args = parser.parse_args()
 
-    if char1 not in characters or char2 not in characters:
+    available_characters = list(characters.keys())
+    if not args.char1:
+        args.char1 = random.choice(available_characters)
+    if not args.char2:
+        args.char2 = random.choice([char for char in available_characters if char != args.char1])
+
+    if args.char1 not in characters or args.char2 not in characters:
         print("指定されたキャラクターが存在しません。")
         sys.exit(1)
 
-    dialogue = generate_scenario(url_or_file, char1, char2, mode)
+    print(f"使用するパラメータ:")
+    print(f"URL/ファイル: {args.url_or_file}")
+    print(f"キャラクター1: {args.char1}")
+    print(f"キャラクター2: {args.char2}")
+    print(f"対話モード: {args.mode}")
+
+    generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+
+if __name__ == "__main__":
+    main()
