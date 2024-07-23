@@ -15,12 +15,6 @@ def load_json_config(filename):
 characters = load_json_config('characters.json')
 character_interactions = load_json_config('character_interactions.json')
 
-genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-)
-
 spelling_corrections = {
     "メタん": "めたん",
     "メタン": "めたん",
@@ -82,6 +76,17 @@ def correct_spelling(text: str) -> str:
     return text
 
 def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
+    try:
+        api_key = os.environ["GEMINI_API_KEY"]
+    except KeyError:
+        raise SystemExit("エラー: GEMINI_API_KEY環境変数が設定されているか確認してください。")
+
+    genai.configure(api_key=api_key)
+
+    model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",
+    )
+
     for retry in range(3):
         try:
             chat_session = model.start_chat(history=[])

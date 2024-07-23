@@ -12,8 +12,14 @@ def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, v
     text = text.replace("。", "。 ").replace("、", "、 ")
 
     query_payload = {"text": text, "speaker": speaker}
-    query_response = requests.post(f"{base_url}/audio_query", params=query_payload)
-    query_response.raise_for_status()
+    try:
+        query_response = requests.post(f"{base_url}/audio_query", params=query_payload)
+        query_response.raise_for_status()
+    except requests.exceptions.ConnectionError:
+        raise SystemExit("エラー: VOICEVOXのDockerコンテナが起動しているか確認してください。")
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(f"エラー: リクエスト中に問題が発生しました: {e}")
+
     query_data = query_response.json()
 
     query_data["speedScale"] = speed_scale
@@ -21,13 +27,16 @@ def generate_voice(text, speaker=3, output_file="output.wav", speed_scale=1.3, v
     query_data["intonationScale"] = intonation_scale
 
     synthesis_payload = {"speaker": speaker}
-    synthesis_response = requests.post(
-        f"{base_url}/synthesis",
-        headers={"Content-Type": "application/json"},
-        params=synthesis_payload,
-        data=json.dumps(query_data)
-    )
-    synthesis_response.raise_for_status()
+    try:
+        synthesis_response = requests.post(
+            f"{base_url}/synthesis",
+            headers={"Content-Type": "application/json"},
+            params=synthesis_payload,
+            data=json.dumps(query_data)
+        )
+        synthesis_response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(f"エラー: 音声合成リクエストで問題が発生しました: {e}")
 
     temp_output_file = "temp_output.wav"
     with open(temp_output_file, "wb") as f:
