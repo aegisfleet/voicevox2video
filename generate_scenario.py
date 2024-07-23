@@ -164,8 +164,13 @@ def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> Li
             content = scrape_website(url_or_file)
         dialogue = generate_dialogue(content, char1, char2, mode)
     else:
-        print(f"Loading dialogue from file: {url_or_file}")
-        dialogue = load_dialogue(url_or_file)
+        print(f"Loading content from file: {url_or_file}")
+        try:
+            dialogue = load_dialogue(url_or_file)
+        except ValueError:
+            with open(url_or_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            dialogue = generate_dialogue(content, char1, char2, mode)
 
     dialogue = [(speaker, text) for speaker, text in dialogue]
 
