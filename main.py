@@ -34,7 +34,7 @@ def create_audio_file(character: str, text: str, output_file: str):
 
 def create_dialogue_audio(dialogue: List[Tuple[str, str]], output_dir: str) -> List[str]:
     audio_files = []
-    for i, (character, text) in enumerate(dialogue):
+    for i, (character, text) in enumerate(dialogue, start=1):
         audio_file = os.path.join(output_dir, f"audio_{i}.wav")
         create_audio_file(character, text, audio_file)
         audio_files.append(audio_file)
@@ -71,7 +71,7 @@ def create_video_file(character: str, text: str, audio_file: str, output_file: s
 def create_dialogue_video(dialogue: List[Tuple[str, str]], audio_files: List[str], output_dir: str, is_vertical: bool) -> List[str]:
     video_files = []
     animation_types = ["fade", "slide_right", "slide_left", "slide_top", "slide_bottom"]
-    for i, ((character, text), audio_file) in enumerate(zip(dialogue, audio_files)):
+    for i, ((character, text), audio_file) in enumerate(zip(dialogue, audio_files), start=1):
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
         animation_type = animation_types[i % len(animation_types)]
         create_video_file(character, text, audio_file, video_file, is_vertical, animation_type)
@@ -99,7 +99,9 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     bgm = bgm.audio_fadein(1).audio_fadeout(3)
     final_audio = CompositeAudioClip([final_clip.audio, bgm])
     final_clip = final_clip.set_audio(final_audio)
-    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k")
+
+    temp_audiofile = os.path.join("tmp", "final_dialogue_outputTEMP_MPY_wvf_snd.mp4")
+    final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k", temp_audiofile=temp_audiofile)
 
 def main():
     parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
@@ -136,9 +138,6 @@ def main():
     bgm_file = "./bgm/のんきな日常.mp3"
     combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, args.vertical)
 
-    for file in audio_files + video_files:
-        os.remove(file)
-    os.rmdir(output_dir)
     print(f"対話動画が完成しました: {final_output}")
 
 if __name__ == "__main__":
