@@ -27,3 +27,6 @@ Win11Debloat,ウィンイレブンデブロート,0
 v2rayNG,ブイツーレイエヌジー,0
 Docker,ドッカー,0
 Stirling,スターリング,0
+Secretlint,シークレットリント,0
+Node.js,ノードジェーエス,0
+Markdown,マークダウン,0
