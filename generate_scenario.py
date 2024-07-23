@@ -6,6 +6,7 @@ from typing import List, Tuple
 import google.generativeai as genai
 import sys
 import re
+import chardet
 
 def load_json_config(filename):
     config_path = os.path.join('config', filename)
@@ -155,6 +156,21 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
                 raise
     return []
 
+def detect_encoding(file_path: str) -> str:
+    with open(file_path, 'rb') as f:
+        raw_data = f.read()
+    return chardet.detect(raw_data)['encoding']
+
+def read_file_with_encoding(file_path: str) -> str:
+    encoding = detect_encoding(file_path)
+    try:
+        with open(file_path, 'r', encoding=encoding) as f:
+            return f.read()
+    except UnicodeDecodeError:
+        print(f"警告: {encoding}でのデコードに失敗しました。UTF-8で再試行します。")
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+
 def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
@@ -168,8 +184,7 @@ def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> Li
         try:
             dialogue = load_dialogue(url_or_file)
         except ValueError:
-            with open(url_or_file, 'r', encoding='utf-8') as f:
-                content = f.read()
+            content = read_file_with_encoding(url_or_file)
             dialogue = generate_dialogue(content, char1, char2, mode)
 
     dialogue = [(speaker, text) for speaker, text in dialogue]
