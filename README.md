@@ -69,14 +69,14 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 スクリプトの実行時に、以下の引数を指定できます：
 
 ```bash
-python3 main.py [url_or_file] [--char1 CHARACTER1] [--char2 CHARACTER2] [--mode MODE] [--vertical]
+python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v]
 ```
 
 - `url_or_file`: URL、GitHubリポジトリ、またはテキストファイルのパス（必須）
-- `--char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
-- `--char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
-- `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
-- `--vertical`: 縦動画を生成する場合に指定（省略可能）
+- `-c1`, `--char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
+- `-c2`, `--char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
+- `-m`, `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
+- `-v`, `--vertical`: 縦動画を生成する場合に指定（省略可能）
 
 ### 入力可能なキャラクター名
 
@@ -112,7 +112,7 @@ python3 main.py [url_or_file] [--char1 CHARACTER1] [--char2 CHARACTER2] [--mode 
 2. GitHubリポジトリのURLを指定して実行（カスタムキャラクター、長い対話、縦動画）：
 
    ```bash
-   python3 main.py https://github.com/username/repository --char1 ずんだもん --char2 春日部つむぎ --mode 2 --vertical
+   python3 main.py https://github.com/username/repository -c1 ずんだもん -c2 春日部つむぎ -m 2 -v
    ```
 
 3. テキストファイルを指定して実行（横動画）：

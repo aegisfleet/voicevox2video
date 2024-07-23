@@ -104,10 +104,10 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 def main():
     parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
     parser.add_argument("url_or_file", help="URLまたはファイルパス")
-    parser.add_argument("--char1", default="ずんだもん", help="キャラクター1 (デフォルト: ずんだもん)")
-    parser.add_argument("--char2", default="四国めたん", help="キャラクター2 (デフォルト: 四国めたん)")
-    parser.add_argument("--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
-    parser.add_argument("--vertical", action="store_true", help="縦型動画を生成")
+    parser.add_argument("-c1", "--char1", default="ずんだもん", help="キャラクター1 (デフォルト: ずんだもん)")
+    parser.add_argument("-c2", "--char2", default="四国めたん", help="キャラクター2 (デフォルト: 四国めたん)")
+    parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
+    parser.add_argument("-v", "--vertical", action="store_true", help="縦型動画を生成")
 
     args = parser.parse_args()
 
