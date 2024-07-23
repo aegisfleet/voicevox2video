@@ -1,6 +1,6 @@
 # VOICEVOX Video Generator
 
-このプロジェクトは、指定されたウェブサイト、GitHubリポジトリ、またはテキストファイルからコンテンツを取得し、そのコンテンツに基づいて対話を生成し、VOICEVOXを使用して音声を合成し、最終的に字幕付きの動画を作成するツールです。
+このプロジェクトは、指定されたウェブサイト、GitHubリポジトリ、テキストファイル、または任意のテキストファイルからコンテンツを取得し、そのコンテンツに基づいて対話を生成し、VOICEVOXを使用して音声を合成し、最終的に字幕付きの動画を作成するツールです。
 
 https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 
@@ -8,8 +8,9 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 
 - ウェブサイトやGitHubリポジトリからのコンテンツスクレイピング
 - テキストファイルからの対話読み込み
-- Google Gemini AIを使用した対話生成
+- Google Gemini AIを使用した対話シナリオの生成
   - 長さの異なる対話（短い/長い）の生成
+  - 任意のテキストファイルからの対話シナリオ生成
 - VOICEVOXによる音声合成
   - 複数のキャラクターの対話生成
 - 字幕付き動画の生成（横動画・縦動画に対応）
@@ -72,7 +73,7 @@ https://github.com/user-attachments/assets/856447b3-86a8-4fc9-bd5f-a1e92eec5e47
 python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v]
 ```
 
-- `url_or_file`: URL、GitHubリポジトリ、またはテキストファイルのパス（必須）
+- `url_or_file`: URL、GitHubリポジトリ、テキストファイルのパス、または任意のテキストファイルのパス（必須）
 - `-c1`, `--char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
 - `-c2`, `--char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
 - `-m`, `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
@@ -130,6 +131,14 @@ python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v]
    キャラクター2: [キャラクター2の発言]
    ```
 
+4. 任意のテキストファイルを指定して実行（対話シナリオを生成）：
+
+   ```bash
+   python3 main.py path/to/your/content.txt
+   ```
+
+   この場合、指定されたテキストファイルの内容に基づいて対話シナリオが生成されます。
+
 ### 対話シナリオの生成（generate_scenario.py）
 
 generate_scenario.pyを直接実行することで、対話のシナリオのみを生成することができます。
@@ -138,7 +147,7 @@ generate_scenario.pyを直接実行することで、対話のシナリオのみ
 python3 generate_scenario.py [url_or_file] [char1] [char2] [mode]
 ```
 
-- `url_or_file`: URL、GitHubリポジトリ、またはテキストファイルのパス（必須）
+- `url_or_file`: URL、GitHubリポジトリ、テキストファイル、または任意のテキストファイルのパス（必須）
 - `char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
 - `char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
 - `mode`: 対話内容のモード（省略可能、デフォルト: 1）
@@ -172,6 +181,7 @@ graph TD
 
 1. **複数キャラクターのサポート**: 11種類のVOICEVOXキャラクターから選択可能になりました。
 2. **対話の長さ制御**: 短い対話と長い対話を生成できるようになりました。
+3. **任意のテキストファイルからの対話シナリオ生成**: 指定されたテキストファイルの内容に基づいて対話シナリオを生成できるようになりました。
 
 ## ライセンス
 
