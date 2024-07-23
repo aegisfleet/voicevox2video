@@ -18,9 +18,15 @@ def load_character_config():
 CHARACTER_CONFIG = load_character_config()
 
 def create_audio_file(character: str, text: str, output_file: str):
-    speaker = CHARACTER_CONFIG[character]['speaker_id']
-    speed_scale = 1.4 if character == "ずんだもん" else 1.3
-    generate_voice(text, speaker=speaker, output_file=output_file, speed_scale=speed_scale)
+    char_config = CHARACTER_CONFIG[character]
+    speaker = char_config['speaker_id']
+    speed_scale = char_config.get('speed_scale', 1.0)
+    volume_scale = char_config.get('volume_scale', 1.0)
+    intonation_scale = char_config.get('intonation_scale', 1.0)
+    
+    generate_voice(text, speaker=speaker, output_file=output_file, 
+                   speed_scale=speed_scale, volume_scale=volume_scale, 
+                   intonation_scale=intonation_scale)
 
     with wave.open(output_file, 'rb') as wf:
         params = wf.getparams()
