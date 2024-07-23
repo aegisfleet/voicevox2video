@@ -30,3 +30,6 @@ Stirling,スターリング,0
 Secretlint,シークレットリント,0
 Node.js,ノードジェーエス,0
 Markdown,マークダウン,0
+NativeLink,ネイティブリンク,0
+Bazel,バゼル,0
+Buck2,バックツー,0
