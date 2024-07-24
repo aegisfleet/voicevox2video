@@ -33,3 +33,10 @@ Markdown,マークダウン,0
 NativeLink,ネイティブリンク,0
 Bazel,バゼル,0
 Buck2,バックツー,0
+Marp,マープ,0
+3D,スリーディー,0
+Gaussian,ガウシアン,0
+Splatting,スプラッティング,0
+Code,コード,0
+Llama,ラマ,0
+DrawDB,ドローデービー,0
