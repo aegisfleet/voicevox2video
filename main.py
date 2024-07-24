@@ -23,7 +23,7 @@ def create_audio_file(character: str, text: str, output_file: str):
     speed_scale = char_config.get('speed_scale', 1.0)
     volume_scale = char_config.get('volume_scale', 1.0)
     intonation_scale = char_config.get('intonation_scale', 1.0)
-    
+
     generate_voice(text, speaker=speaker, output_file=output_file, 
                    speed_scale=speed_scale, volume_scale=volume_scale, 
                    intonation_scale=intonation_scale)
@@ -69,36 +69,40 @@ def remove_noise(audio_data, sample_rate, cutoff=100, threshold=0.01, fade_durat
     audio_array = (audio_array * 32767.0).astype(np.int16)
     return audio_array.tobytes()
 
-def create_video_file(character: str, text: str, audio_file: str, output_file: str, is_vertical: bool, animation_type: str):
+def create_video_file(character: str, text: str, audio_file: str, output_file: str, is_vertical: bool, animation_type: str, title: str):
     audio_duration = AudioFileClip(audio_file).duration
     create_video_with_subtitles(text, character, duration=audio_duration, output_file=output_file, 
-                                font_path=None, animation_type=animation_type, is_vertical=is_vertical)
+                                font_path=None, animation_type=animation_type, is_vertical=is_vertical, title=title)
 
-def create_dialogue_video(dialogue: List[Tuple[str, str]], audio_files: List[str], output_dir: str, is_vertical: bool) -> List[str]:
+def create_dialogue_video(dialogue: List[Tuple[str, str]], audio_files: List[str], output_dir: str, is_vertical: bool, title: str) -> List[str]:
     video_files = []
-    animation_types = ["fade", "slide_right", "slide_left", "slide_top", "slide_bottom"]
+    animation_types = ["slide_bottom", "fade", "slide_right", "slide_left", "slide_top"]
     for i, ((character, text), audio_file) in enumerate(zip(dialogue, audio_files), start=1):
         video_file = os.path.join(output_dir, f"video_{i}.mp4")
         animation_type = animation_types[i % len(animation_types)]
-        create_video_file(character, text, audio_file, video_file, is_vertical, animation_type)
+        create_video_file(character, text, audio_file, video_file, is_vertical, animation_type, title)
         video_files.append(video_file)
     return video_files
 
 def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str, is_vertical: bool):
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) for video, audio in zip(video_files, audio_files)]
     crossfaded_clips = []
-    fade_in_duration = 0.1
-    fade_out_duration = 0.3
+    audio_fade_in_duration = 0.1
+    audio_fade_out_duration = 0.3
+    video_fade_in_duration = 0.5
+    video_fade_out_duration = 0.5
     blank_duration = 1
     size = (720, 1280) if is_vertical else (1280, 720)
     blank_clip = ColorClip(size=size, color=(0, 0, 0)).set_duration(blank_duration)
+
     for i, clip in enumerate(clips):
-        if i > 0:
-            clip = clip.crossfadein(fade_in_duration)
-        if i < len(clips) - 1:
-            clip = clip.crossfadeout(fade_out_duration)
-        clip = clip.audio_fadein(fade_in_duration).audio_fadeout(fade_out_duration)
+        clip = clip.audio_fadein(audio_fade_in_duration).audio_fadeout(audio_fade_out_duration)
+        if i == 0:
+            clip = clip.fadein(video_fade_in_duration)
+        if i == len(clips) - 1:
+            clip = clip.fadeout(video_fade_out_duration)
         crossfaded_clips.append(clip)
+
     final_clip = concatenate_videoclips([blank_clip] + crossfaded_clips + [blank_clip], method="compose")
     bgm = AudioFileClip(bgm_file).volumex(0.1)
     bgm = bgm.audio_loop(duration=final_clip.duration) if bgm.duration < final_clip.duration else bgm.subclip(0, final_clip.duration)
@@ -108,6 +112,15 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
     temp_audiofile = os.path.join("tmp", "final_dialogue_outputTEMP_MPY_wvf_snd.mp4")
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k", temp_audiofile=temp_audiofile)
+
+def remove_visible_files(directory):
+    for item in os.listdir(directory):
+        if not item.startswith('.'):
+            item_path = os.path.join(directory, item)
+            if os.path.isfile(item_path):
+                os.unlink(item_path)
+            elif os.path.isdir(item_path):
+                shutil.rmtree(item_path)
 
 def main():
     parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
@@ -131,15 +144,23 @@ def main():
     print(f"長い対話: {'はい' if args.mode in [2, 4] else 'いいえ'}")
     print(f"縦型動画: {'はい' if args.vertical else 'いいえ'}")
 
-    dialogue = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+    scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+
+    if scenario and scenario[0][0] == "タイトル":
+        title = scenario[0][1].strip()
+        dialogue = scenario[1:]
+    else:
+        title = ""
+        dialogue = scenario
 
     output_dir = "tmp"
     if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
-    os.makedirs(output_dir, exist_ok=True)
+        remove_visible_files(output_dir)
+    else:
+        os.makedirs(output_dir)
 
     audio_files = create_dialogue_audio(dialogue, output_dir)
-    video_files = create_dialogue_video(dialogue, audio_files, output_dir, args.vertical)
+    video_files = create_dialogue_video(dialogue, audio_files, output_dir, args.vertical, title)
     final_output = "output/final_dialogue_output.mp4"
     bgm_file = "./bgm/のんきな日常.mp3"
     combine_dialogue_clips(video_files, audio_files, final_output, bgm_file, args.vertical)
