@@ -40,3 +40,11 @@ Splatting,スプラッティング,0
 Code,コード,0
 Llama,ラマ,0
 DrawDB,ドローデービー,0
+MIXI,ミクシィ,0
+Flutter,フラッター,0
+Git,ギット,0
+K8s,ケイハチエス,0
+WEB,ウェブ,0
+Linkspector,リンクスペクター,0
+Truffle,トゥラフル,0
+Security,セキュリティ,0
