@@ -118,6 +118,10 @@ def clean_output_directory(directory: str) -> None:
     else:
         os.makedirs(directory)
 
+def log_parameters(args):
+    print(f"使用するパラメータ:\nURL/ファイル: {args.url_or_file}\nキャラクター1: {args.char1}\nキャラクター2: {args.char2}")
+    print(f"長い対話: {'はい' if args.mode in [2, 4] else 'いいえ'}\n縦型動画: {'はい' if args.vertical else 'いいえ'}")
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
     parser.add_argument("url_or_file", help="URLまたはファイルパス")
@@ -132,12 +136,32 @@ def main() -> None:
         print("指定されたキャラクターが存在しません。デフォルトのキャラクターを使用します。")
         args.char1, args.char2 = "ずんだもん", "四国めたん"
 
-    print(f"使用するパラメータ:\nURL/ファイル: {args.url_or_file}\nキャラクター1: {args.char1}\nキャラクター2: {args.char2}")
-    print(f"長い対話: {'はい' if args.mode in [2, 4] else 'いいえ'}\n縦型動画: {'はい' if args.vertical else 'いいえ'}")
+    if args.url_or_file.endswith('.txt'):
+        with open(args.url_or_file, 'r', encoding='utf-8') as f:
+            content = f.read().strip().split('\n')
 
-    scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
-    title = scenario[0][1].strip() if scenario and scenario[0][0] == "タイトル" else ""
-    dialogue = scenario[1:] if title else scenario
+        print("テキストファイルの内容:")
+        for line in content:
+            print(line)
+
+        if content[0].startswith("タイトル:"):
+            title = content[0].split(":")[1].strip()
+            dialogue = [(line.split(":")[0], line.split(":")[1]) for line in content[1:]]
+        else:
+            title = ""
+            try:
+                dialogue = [(line.split(":")[0], line.split(":")[1]) for line in content]
+            except IndexError:
+                print("シナリオを生成します。")
+                log_parameters(args)
+                scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+                title = scenario[0][1].strip() if scenario and scenario[0][0] == "タイトル" else ""
+                dialogue = scenario[1:] if title else scenario
+    else:
+        log_parameters(args)
+        scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+        title = scenario[0][1].strip() if scenario and scenario[0][0] == "タイトル" else ""
+        dialogue = scenario[1:] if title else scenario
 
     clean_output_directory(OUTPUT_DIR)
 
