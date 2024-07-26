@@ -2,6 +2,8 @@ import argparse
 import os
 import shutil
 import json
+import base64
+import tempfile
 from typing import List, Tuple, Dict
 from generate_voice import generate_voice
 from generate_movie import create_video_with_subtitles
@@ -14,7 +16,7 @@ from generate_scenario import generate_scenario
 CONFIG_PATH = 'config/characters.json'
 OUTPUT_DIR = 'tmp'
 FINAL_OUTPUT = 'output/final_dialogue_output.mp4'
-BGM_FILE = './bgm/のんきな日常.mp3'
+BGM_FILE = './bgm/のんきな日常.bin'
 
 def load_character_config() -> Dict:
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
@@ -81,6 +83,18 @@ def create_dialogue_files(dialogue: List[Tuple[str, str]], is_vertical: bool, ti
 
     return audio_files, video_files
 
+def decode_bgm(bgm_file: str) -> str:
+    with open(bgm_file, "rb") as f:
+        encoded_data = f.read()
+
+    decoded_data = base64.b64decode(encoded_data)
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    temp_file.write(decoded_data)
+    temp_file.close()
+
+    return temp_file.name
+
 def combine_dialogue_clips(video_files: List[str], audio_files: List[str], output_file: str, bgm_file: str, is_vertical: bool) -> None:
     clips = [VideoFileClip(video).set_audio(AudioFileClip(audio)) for video, audio in zip(video_files, audio_files)]
 
@@ -96,7 +110,8 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     blank_clip = ColorClip(size=size, color=(0, 0, 0)).set_duration(1)
     final_clip = concatenate_videoclips([blank_clip] + clips + [blank_clip], method="compose")
 
-    bgm = AudioFileClip(bgm_file).volumex(0.1)
+    tmp_bgm_file = decode_bgm(bgm_file)
+    bgm = AudioFileClip(tmp_bgm_file).volumex(0.1)
     bgm = bgm.audio_loop(duration=final_clip.duration) if bgm.duration < final_clip.duration else bgm.subclip(0, final_clip.duration)
     bgm = bgm.audio_fadein(1).audio_fadeout(3)
 
@@ -105,6 +120,8 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
     temp_audiofile = os.path.join(OUTPUT_DIR, "final_dialogue_outputTEMP_MPY_wvf_snd.mp4")
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k", temp_audiofile=temp_audiofile)
+
+    os.unlink(tmp_bgm_file)
 
 def clean_output_directory(directory: str) -> None:
     if os.path.exists(directory):
