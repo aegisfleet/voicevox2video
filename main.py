@@ -84,7 +84,7 @@ def create_dialogue_files(dialogue: List[Tuple[str, str]], is_vertical: bool, ti
     return audio_files, video_files
 
 def select_bgm(atmosphere: str) -> str:
-    bgm_files = [f for f in os.listdir(BGM_DIR) if f.endswith('.bin')]
+    bgm_files = [f for f in os.listdir(BGM_DIR) if f.endswith('.bin') or f.endswith('.mp3')]
     atmosphere_keywords = set(keyword.strip().lower() for keyword in atmosphere.split('、'))
 
     best_match = None
@@ -205,8 +205,8 @@ def main() -> None:
                 elif "雰囲気" in line and not atmosphere:
                     atmosphere = line.split(":", 1)[1].strip() if ":" in line else line.replace("雰囲気", "").strip()
                 else:
-                        speaker, text = line.split(":", 1)
-                        dialogue.append((speaker.strip(), text.strip()))
+                    speaker, text = line.split(":", 1)
+                    dialogue.append((speaker.strip(), text.strip()))
         except ValueError:
             print("シナリオを生成します。")
             log_parameters(args)
@@ -220,15 +220,18 @@ def main() -> None:
     clean_output_directory(OUTPUT_DIR)
 
     audio_files, video_files = create_dialogue_files(dialogue, args.vertical, title)
-    
+
     if args.bgm:
         bgm_file = args.bgm
     else:
-        bgm_file = decode_bgm(select_bgm(atmosphere))
-    
+        bgm_file = select_bgm(atmosphere)
+
+    if bgm_file.endswith('.bin'):
+        bgm_file = decode_bgm(bgm_file)
+
     combine_dialogue_clips(video_files, audio_files, FINAL_OUTPUT, bgm_file, args.vertical)
-    
-    if not args.bgm:
+
+    if bgm_file.endswith('.bin'):
         os.unlink(bgm_file)
 
     print(f"対話動画が完成しました: {FINAL_OUTPUT}")
