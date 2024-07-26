@@ -2,7 +2,7 @@
 
 このプロジェクトは、指定されたウェブサイト、GitHubリポジトリ、テキストファイル、または任意のテキストファイルからコンテンツを取得し、そのコンテンツに基づいて対話を生成し、VOICEVOXを使用して音声を合成し、最終的に字幕付きの動画を作成するツールです。
 
-https://github.com/user-attachments/assets/56f1c0d4-43f0-49a2-9a9b-e82a6db70589
+https://github.com/user-attachments/assets/8f00ca43-a764-4756-bca0-6d5eb74c3d8b
 
 ## 機能
 
