@@ -25,6 +25,8 @@ NAME_OUTLINE_WIDTH = 6
 ANIMATION_DURATION = 0.5
 TEXT_WRAP_WIDTH_VERTICAL = 30
 TEXT_WRAP_WIDTH_HORIZONTAL = 60
+TITLE_WRAP_WIDTH_HORIZONTAL = 50
+TITLE_VERTICAL_POSITION = 75
 
 def load_character_data():
     with open(CHARACTER_DATA_FILE, 'r', encoding='utf-8') as f:
@@ -98,6 +100,9 @@ def create_text_image(text, character, font_size, font_path, size, is_vertical=F
     bubble_x = (size[0] - bubble_width) // 2
     bubble_y = (size[1] - bubble_height) // 2
 
+    if not is_vertical:
+        bubble_y += 100
+
     name_x, name_y = size[0] // 2, bubble_y - character_font.getbbox(character)[3] - MARGIN_VERTICAL - MARGIN_CHARACTER_NAME
 
     draw_bubble_with_shadow(draw, bubble_x, bubble_y, bubble_width, bubble_height, shadow_color, character_color)
@@ -111,14 +116,15 @@ def create_text_image(text, character, font_size, font_path, size, is_vertical=F
 
     return np.array(img)
 
-def create_title_image(title, font_path, font_size, size, character):
+def create_title_image(title, font_path, font_size, size):
     img = Image.new('RGBA', size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
     title_font = ImageFont.truetype(font_path, font_size + FONT_SIZE_INCREASE)
 
-    title_lines = wrap_text(title, width=TEXT_WRAP_WIDTH_VERTICAL if size[0] < size[1] else TEXT_WRAP_WIDTH_HORIZONTAL)
+    title_lines = wrap_text(title, width=TEXT_WRAP_WIDTH_VERTICAL if size[0] < size[1] else TITLE_WRAP_WIDTH_HORIZONTAL)
     line_height = title_font.getbbox("A")[3]
-    fixed_title_y = 60
+
+    fixed_title_y = TITLE_VERTICAL_POSITION
 
     for i, line in enumerate(title_lines):
         title_width = title_font.getbbox(line)[2]
@@ -134,8 +140,8 @@ def create_title_image(title, font_path, font_size, size, character):
 
     return np.array(img)
 
-def add_animation(clip, animation_type, duration, is_vertical=False):
-    clip = clip.fx(vfx.fadeout, duration=ANIMATION_DURATION).fx(vfx.fadein, duration=ANIMATION_DURATION)
+def add_animation(clip, animation_type, is_vertical=False):
+    clip = clip.fx(vfx.fadeout, ANIMATION_DURATION).fx(vfx.fadein, ANIMATION_DURATION)
     if animation_type == "fade":
         return clip
 
@@ -161,12 +167,12 @@ def create_video_with_subtitles(subtitle_text, character, duration=5, output_fil
     background = ColorClip(size=size, color=(0, 0, 0)).set_duration(duration)
     text_img = create_text_image(subtitle_text, character, FONT_SIZE, font_path, size, is_vertical)
     text_clip = ImageClip(text_img).set_duration(duration)
-    animated_text_clip = add_animation(text_clip, animation_type, duration, is_vertical)
+    animated_text_clip = add_animation(text_clip, animation_type, is_vertical)
 
     clips = [background, animated_text_clip]
 
     if title:
-        title_img = create_title_image(title, font_path, FONT_SIZE, size, character)
+        title_img = create_title_image(title, font_path, FONT_SIZE, size)
         title_clip = ImageClip(title_img).set_duration(duration)
         clips.append(title_clip)
 
