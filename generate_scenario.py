@@ -17,6 +17,7 @@ characters = load_json_config('characters.json')
 character_interactions = load_json_config('character_interactions.json')
 
 spelling_corrections = {
+    "## タイトル:": "タイトル:",
     "メタん": "めたん",
     "メタン": "めたん",
     "ずんだモン": "ずんだもん",
