@@ -101,7 +101,7 @@ def create_text_image(text, character, font_size, font_path, size, is_vertical=F
     bubble_y = (size[1] - bubble_height) // 2
 
     if not is_vertical:
-        bubble_y += 100
+        bubble_y += TITLE_VERTICAL_POSITION
 
     name_x, name_y = size[0] // 2, bubble_y - character_font.getbbox(character)[3] - MARGIN_VERTICAL - MARGIN_CHARACTER_NAME
 
