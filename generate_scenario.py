@@ -85,6 +85,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
 対話の出力形式は以下のように1行目にタイトルを記載し、2行目以降に対話内容を記載してください：
 ...
 タイトル: [話題の内容を取り入れた視聴者の興味を引くタイトル]
+雰囲気: [対話の雰囲気を端的な形容詞で記載]
 {char1}: [{char1}の発言]
 {char2}: [{char2}の発言]
 {char1}: [{char1}の発言]

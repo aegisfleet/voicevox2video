@@ -16,7 +16,7 @@ from generate_scenario import generate_scenario
 CONFIG_PATH = 'config/characters.json'
 OUTPUT_DIR = 'tmp'
 FINAL_OUTPUT = 'output/final_dialogue_output.mp4'
-BGM_FILE = './bgm/のんきな日常.bin'
+BGM_DIR = './bgm/'
 
 def load_character_config() -> Dict:
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
@@ -83,6 +83,31 @@ def create_dialogue_files(dialogue: List[Tuple[str, str]], is_vertical: bool, ti
 
     return audio_files, video_files
 
+def select_bgm(atmosphere: str) -> str:
+    bgm_files = [f for f in os.listdir(BGM_DIR) if f.endswith('.bin')]
+    atmosphere_keywords = set(keyword.strip().lower() for keyword in atmosphere.split('、'))
+
+    best_match = None
+    best_match_count = 0
+
+    for bgm_file in bgm_files:
+        bgm_name = os.path.splitext(bgm_file)[0].lower()
+        bgm_keywords = set(bgm_name.split('_'))
+
+        match_count = len(atmosphere_keywords.intersection(bgm_keywords))
+
+        if match_count > best_match_count:
+            best_match = bgm_file
+            best_match_count = match_count
+
+        if match_count == len(atmosphere_keywords):
+            return os.path.join(BGM_DIR, bgm_file)
+
+    if best_match:
+        return os.path.join(BGM_DIR, best_match)
+
+    return os.path.join(BGM_DIR, 'default.bin')
+
 def decode_bgm(bgm_file: str) -> str:
     with open(bgm_file, "rb") as f:
         encoded_data = f.read()
@@ -110,8 +135,7 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
     blank_clip = ColorClip(size=size, color=(0, 0, 0)).set_duration(1)
     final_clip = concatenate_videoclips([blank_clip] + clips + [blank_clip], method="compose")
 
-    tmp_bgm_file = decode_bgm(bgm_file)
-    bgm = AudioFileClip(tmp_bgm_file).volumex(0.1)
+    bgm = AudioFileClip(bgm_file).volumex(0.1)
     bgm = bgm.audio_loop(duration=final_clip.duration) if bgm.duration < final_clip.duration else bgm.subclip(0, final_clip.duration)
     bgm = bgm.audio_fadein(1).audio_fadeout(3)
 
@@ -120,8 +144,6 @@ def combine_dialogue_clips(video_files: List[str], audio_files: List[str], outpu
 
     temp_audiofile = os.path.join(OUTPUT_DIR, "final_dialogue_outputTEMP_MPY_wvf_snd.mp4")
     final_clip.write_videofile(output_file, codec="libx264", audio_codec="aac", bitrate="5000k", audio_bitrate="192k", temp_audiofile=temp_audiofile)
-
-    os.unlink(tmp_bgm_file)
 
 def clean_output_directory(directory: str) -> None:
     if os.path.exists(directory):
@@ -139,6 +161,16 @@ def log_parameters(args):
     print(f"使用するパラメータ:\nURL/ファイル: {args.url_or_file}\nキャラクター1: {args.char1}\nキャラクター2: {args.char2}")
     print(f"長い対話: {'はい' if args.mode in [2, 4] else 'いいえ'}\n縦型動画: {'はい' if args.vertical else 'いいえ'}")
 
+def process_scenario(scenario, title, atmosphere, dialogue):
+    for item in scenario:
+        if "タイトル" in item[0] and not title:
+            title = item[1].strip()
+        elif "雰囲気" in item[0] and not atmosphere:
+            atmosphere = item[1].strip()
+        else:
+            dialogue.append(item)
+    return title, atmosphere, dialogue
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="対話動画生成スクリプト")
     parser.add_argument("url_or_file", help="URLまたはファイルパス")
@@ -146,12 +178,17 @@ def main() -> None:
     parser.add_argument("-c2", "--char2", default="四国めたん", help="キャラクター2 (デフォルト: 四国めたん)")
     parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
     parser.add_argument("-v", "--vertical", action="store_true", help="縦型動画を生成")
+    parser.add_argument("-b", "--bgm", help="BGMファイルのパス")
 
     args = parser.parse_args()
 
     if args.char1 not in CHARACTER_CONFIG or args.char2 not in CHARACTER_CONFIG:
         print("指定されたキャラクターが存在しません。デフォルトのキャラクターを使用します。")
         args.char1, args.char2 = "ずんだもん", "四国めたん"
+
+    title = ""
+    atmosphere = ""
+    dialogue = []
 
     if args.url_or_file.endswith('.txt'):
         with open(args.url_or_file, 'r', encoding='utf-8') as f:
@@ -161,29 +198,41 @@ def main() -> None:
         for line in content:
             print(line)
 
-        if content[0].startswith("タイトル:"):
-            title = content[0].split(":")[1].strip()
-            dialogue = [(line.split(":")[0], line.split(":")[1]) for line in content[1:]]
-        else:
-            title = ""
-            try:
-                dialogue = [(line.split(":")[0], line.split(":")[1]) for line in content]
-            except IndexError:
-                print("シナリオを生成します。")
-                log_parameters(args)
-                scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
-                title = scenario[0][1].strip() if scenario and scenario[0][0] == "タイトル" else ""
-                dialogue = scenario[1:] if title else scenario
+        for i, line in enumerate(content):
+            if "タイトル" in line and not title:
+                title = line.split(":", 1)[1].strip() if ":" in line else line.replace("タイトル", "").strip()
+            elif "雰囲気" in line and not atmosphere:
+                atmosphere = line.split(":", 1)[1].strip() if ":" in line else line.replace("雰囲気", "").strip()
+            else:
+                try:
+                    speaker, text = line.split(":", 1)
+                    dialogue.append((speaker.strip(), text.strip()))
+                except ValueError:
+                    print(f"警告: 行 {i+1} を解析できませんでした: {line}")
+
+        if not dialogue:
+            print("シナリオを生成します。")
+            log_parameters(args)
+            scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
+            title, atmosphere, dialogue = process_scenario(scenario, title, atmosphere, dialogue)
     else:
         log_parameters(args)
         scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
-        title = scenario[0][1].strip() if scenario and scenario[0][0] == "タイトル" else ""
-        dialogue = scenario[1:] if title else scenario
+        title, atmosphere, dialogue = process_scenario(scenario, title, atmosphere, dialogue)
 
     clean_output_directory(OUTPUT_DIR)
 
     audio_files, video_files = create_dialogue_files(dialogue, args.vertical, title)
-    combine_dialogue_clips(video_files, audio_files, FINAL_OUTPUT, BGM_FILE, args.vertical)
+    
+    if args.bgm:
+        bgm_file = args.bgm
+    else:
+        bgm_file = decode_bgm(select_bgm(atmosphere))
+    
+    combine_dialogue_clips(video_files, audio_files, FINAL_OUTPUT, bgm_file, args.vertical)
+    
+    if not args.bgm:
+        os.unlink(bgm_file)
 
     print(f"対話動画が完成しました: {FINAL_OUTPUT}")
 
