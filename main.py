@@ -191,26 +191,23 @@ def main() -> None:
     dialogue = []
 
     if args.url_or_file.endswith('.txt'):
-        with open(args.url_or_file, 'r', encoding='utf-8') as f:
-            content = f.read().strip().split('\n')
+        try:
+            with open(args.url_or_file, 'r', encoding='utf-8') as f:
+                content = f.read().strip().split('\n')
 
-        print("テキストファイルの内容:")
-        for line in content:
-            print(line)
+            print("テキストファイルの内容:")
+            for line in content:
+                print(line)
 
-        for i, line in enumerate(content):
-            if "タイトル" in line and not title:
-                title = line.split(":", 1)[1].strip() if ":" in line else line.replace("タイトル", "").strip()
-            elif "雰囲気" in line and not atmosphere:
-                atmosphere = line.split(":", 1)[1].strip() if ":" in line else line.replace("雰囲気", "").strip()
-            else:
-                try:
-                    speaker, text = line.split(":", 1)
-                    dialogue.append((speaker.strip(), text.strip()))
-                except ValueError:
-                    print(f"警告: 行 {i+1} を解析できませんでした: {line}")
-
-        if not dialogue:
+            for i, line in enumerate(content):
+                if "タイトル" in line and not title:
+                    title = line.split(":", 1)[1].strip() if ":" in line else line.replace("タイトル", "").strip()
+                elif "雰囲気" in line and not atmosphere:
+                    atmosphere = line.split(":", 1)[1].strip() if ":" in line else line.replace("雰囲気", "").strip()
+                else:
+                        speaker, text = line.split(":", 1)
+                        dialogue.append((speaker.strip(), text.strip()))
+        except ValueError:
             print("シナリオを生成します。")
             log_parameters(args)
             scenario = generate_scenario(args.url_or_file, args.char1, args.char2, args.mode)
