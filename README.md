@@ -59,10 +59,25 @@ https://github.com/user-attachments/assets/8f00ca43-a764-4756-bca0-6d5eb74c3d8b
    python3 user_dict/user_dict_manager.py
    ```
 
-7. 環境変数を設定します：
+7. Google Gemini API キーを設定します：
+
+   a. 環境変数を使用する場合：
 
    ```bash
    export GEMINI_API_KEY=your_gemini_api_key
+   ```
+
+   b. ファイルを使用する場合：
+
+   ```bash
+   echo "your_gemini_api_key" > .gemini_api_key
+   ```
+
+   注意: `.gemini_api_key` ファイルは `.gitignore` に追加されているため、Git の追跡対象外となります。
+
+8. VOICEVOX API ホストを設定します：
+
+   ```bash
    export VOICEVOX_API_HOST=localhost  # VOICEVOXエンジンのホスト
    ```
 

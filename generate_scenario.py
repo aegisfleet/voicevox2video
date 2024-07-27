@@ -17,12 +17,26 @@ characters = load_json_config('characters.json')
 character_interactions = load_json_config('character_interactions.json')
 
 spelling_corrections = {
-    "## タイトル:": "タイトル:",
     "メタん": "めたん",
     "メタン": "めたん",
     "ずんだモン": "ずんだもん",
     "なのだな？": "なのだ？",
 }
+
+def get_api_key() -> str:
+    api_key = os.environ.get("GEMINI_API_KEY")
+
+    if not api_key:
+        try:
+            with open('.gemini_api_key', 'r') as f:
+                api_key = f.read().strip()
+        except FileNotFoundError:
+            raise SystemExit("エラー: GEMINI_API_KEY環境変数が設定されておらず、.gemini_api_keyファイルも見つかりません。")
+
+    if not api_key:
+        raise SystemExit("エラー: API キーが見つかりません。")
+
+    return api_key
 
 def scrape_website(url: str) -> str:
     response = requests.get(url)
@@ -68,10 +82,7 @@ def correct_spelling(text: str) -> str:
     return text
 
 def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        raise SystemExit("エラー: GEMINI_API_KEY環境変数が設定されていません。")
-
+    api_key = get_api_key()
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
@@ -121,6 +132,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
             for line in response.text.strip().split('\n'):
                 if ':' in line:
                     speaker, text = line.split(':', 1)
+                    speaker = speaker.replace("## タイトル", "タイトル")
                     dialogue.append((speaker.strip(), correct_spelling(text.strip())))
             return dialogue
         except ValueError as e:
