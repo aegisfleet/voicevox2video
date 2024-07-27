@@ -64,7 +64,7 @@ def wrap_text(text, width):
     return lines
 
 def draw_bubble_with_shadow(draw, x, y, width, height, shadow_color, bubble_color):
-    draw.rounded_rectangle([x + SHADOW_OFFSET, y + SHADOW_OFFSET, 
+    draw.rounded_rectangle([x + SHADOW_OFFSET, y + SHADOW_OFFSET,
                             x + width + SHADOW_OFFSET, y + height + SHADOW_OFFSET],
                            radius=BUBBLE_RADIUS, fill=shadow_color)
     draw.rounded_rectangle([x, y, x + width, y + height],
@@ -158,11 +158,9 @@ def add_animation(clip, animation_type, is_vertical=False):
     return clip.set_position(animations.get(animation_type, lambda t: (0, 0)))
 
 def create_video_with_subtitles(subtitle_text, character, duration=5, output_file="output_with_subtitles.mp4",
-                                font_path=None, animation_type="fade", is_vertical=False, title=""):
-    if font_path is None:
-        font_path = find_font()
-
+                                animation_type="fade", is_vertical=False, title=""):
     size = (720, 1280) if is_vertical else (1280, 720)
+    font_path = find_font()
 
     background = ColorClip(size=size, color=(0, 0, 0)).set_duration(duration)
     text_img = create_text_image(subtitle_text, character, FONT_SIZE, font_path, size, is_vertical)

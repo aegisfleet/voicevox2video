@@ -70,7 +70,7 @@ def create_dialogue_files(dialogue: List[Tuple[str, str]], is_vertical: bool, ti
         audio_duration = AudioFileClip(audio_file).duration
 
         create_video_with_subtitles(text, character, duration=audio_duration, output_file=video_file, 
-                                    font_path=None, animation_type=animation_types[i % len(animation_types)], 
+                                    animation_type=animation_types[i % len(animation_types)], 
                                     is_vertical=is_vertical, title=title)
 
         audio_files.append(audio_file)
