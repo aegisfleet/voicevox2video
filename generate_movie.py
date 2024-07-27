@@ -17,106 +17,60 @@ DEFAULT_COLOR = (255, 255, 255)
 TITLE_SHADOW_COLOR = (50, 50, 50)
 FONT_SIZE = 36
 FONT_SIZE_INCREASE = 5
-MARGIN_VERTICAL = 20
-MARGIN_HORIZONTAL = 40
-MARGIN_CHARACTER_NAME = 20
+MARGIN = {
+    'VERTICAL': 20,
+    'HORIZONTAL': 40,
+    'CHARACTER_NAME': 20
+}
 BUBBLE_RADIUS = 10
 SHADOW_OFFSET = 15
 NAME_OUTLINE_WIDTH = 6
 ANIMATION_DURATION = 0.5
-TEXT_WRAP_WIDTH_VERTICAL = 30
-TEXT_WRAP_WIDTH_HORIZONTAL = 60
-TITLE_WRAP_WIDTH_HORIZONTAL = 50
+TEXT_WRAP_WIDTH = {
+    'VERTICAL': 30,
+    'HORIZONTAL': 60,
+    'TITLE': 50
+}
 TITLE_VERTICAL_POSITION = 75
 
 EMOJI_EMOTION_MAP = {
-    "😊": "happy",
-    "😂": "happy",
-    "😆": "happy",
-    "😃": "happy",
-    "😄": "happy",
-    "😁": "happy",
-    "😅": "happy",
-    "😎": "happy",
-    "😋": "happy",
-    "🤗": "happy",
-    "😍": "love",
-    "🤩": "love",
-    "😘": "love",
-    "🥰": "love",
-    "❤️": "love",
-    "💕": "love",
-    "😢": "sad",
-    "😭": "sad",
-    "😞": "sad",
-    "😔": "sad",
-    "😟": "sad",
-    "😖": "sad",
-    "😩": "sad",
-    "😥": "sad",
-    "😵": "sad",
-    "💦": "sad",
-    "😡": "angry",
-    "😠": "angry",
-    "🤬": "angry",
-    "😤": "angry",
-    "😱": "surprised",
-    "😲": "surprised",
-    "🤯": "surprised",
-    "😳": "surprised",
-    "😬": "embarrassed",
-    "😨": "embarrassed",
-    "😴": "tired",
-    "🥱": "tired",
+    "😊": "happy", "😂": "happy", "😆": "happy", "😃": "happy", "😄": "happy",
+    "😁": "happy", "😅": "happy", "😎": "happy", "😋": "happy", "🤗": "happy",
+    "😍": "love", "🤩": "love", "😘": "love", "🥰": "love", "❤️": "love", "💕": "love",
+    "😢": "sad", "😭": "sad", "😞": "sad", "😔": "sad", "😟": "sad",
+    "😖": "sad", "😩": "sad", "😥": "sad", "😵": "sad", "💦": "sad",
+    "😡": "angry", "😠": "angry", "🤬": "angry", "😤": "angry",
+    "😱": "surprised", "😲": "surprised", "🤯": "surprised", "😳": "surprised",
+    "😬": "embarrassed", "😨": "embarrassed",
+    "😴": "tired", "🥱": "tired",
     "🤔": "thinking",
-    "😐": "neutral",
-    "😑": "neutral",
-    "🙄": "neutral",
-    "😶": "neutral",
-    "🤨": "confused",
-    "😕": "confused",
+    "😐": "neutral", "😑": "neutral", "🙄": "neutral", "😶": "neutral",
+    "🤨": "confused", "😕": "confused",
     "😟": "worried",
     "😒": "unimpressed",
-    "😏": "smug",
-    "😉": "smug",
-    "💪": "smug",
+    "😏": "smug", "😉": "smug", "💪": "smug",
 }
 
 def apply_emotion_effect(clip, emotion):
-    if emotion == "happy":
-        return clip.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 3))
-    elif emotion == "sad":
-        return clip.fx(vfx.colorx, 0.9)
-    elif emotion == "angry":
-        return clip.fx(vfx.colorx, 1.2).fx(vfx.lum_contrast, 0, 0, 2.0).fx(vfx.gamma_corr, 0.8)
-    elif emotion == "surprised":
-        return clip.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, 0, 0, 1.5)
-    elif emotion == "embarrassed":
-        return clip.fx(vfx.colorx, 0.8).fx(vfx.gamma_corr, 0.8)
-    elif emotion == "love":
-        return clip.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.2).fx(vfx.rotate, lambda t: np.sin(t * 8))
-    elif emotion == "tired":
-        return clip.fx(vfx.colorx, 0.5).fx(vfx.lum_contrast, 0, 0, 0.5)
-    elif emotion == "thinking":
-        return clip.fx(vfx.lum_contrast, 0, 0, 2.0)
-    elif emotion == "neutral":
-        return clip
-    elif emotion == "confused":
-        return clip.fx(vfx.colorx, 0.95).fx(vfx.lum_contrast, 0, 0, 1.0).fx(vfx.rotate, lambda t: 2 * np.sin(t * 8))
-    elif emotion == "worried":
-        return clip.fx(vfx.colorx, 0.6).fx(vfx.lum_contrast, 0, 0, 0.5)
-    elif emotion == "unimpressed":
-        return clip.fx(vfx.colorx, 0.9).fx(vfx.lum_contrast, -0.3, 0, 0.8)
-    elif emotion == "smug":
-        return clip.fx(vfx.colorx, 1.2).fx(vfx.gamma_corr, 1.1)
-    return clip
+    effects = {
+        "happy": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 3)),
+        "sad": lambda c: c.fx(vfx.colorx, 0.9),
+        "angry": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.lum_contrast, 0, 0, 2.0).fx(vfx.gamma_corr, 0.8),
+        "surprised": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, 0, 0, 1.5),
+        "embarrassed": lambda c: c.fx(vfx.colorx, 0.8).fx(vfx.gamma_corr, 0.8),
+        "love": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.2).fx(vfx.rotate, lambda t: np.sin(t * 8)),
+        "tired": lambda c: c.fx(vfx.colorx, 0.5).fx(vfx.lum_contrast, 0, 0, 0.5),
+        "thinking": lambda c: c.fx(vfx.lum_contrast, 0, 0, 2.0),
+        "neutral": lambda c: c,
+        "confused": lambda c: c.fx(vfx.colorx, 0.95).fx(vfx.lum_contrast, 0, 0, 1.0).fx(vfx.rotate, lambda t: 2 * np.sin(t * 8)),
+        "worried": lambda c: c.fx(vfx.colorx, 0.6).fx(vfx.lum_contrast, 0, 0, 0.5),
+        "unimpressed": lambda c: c.fx(vfx.colorx, 0.9).fx(vfx.lum_contrast, -0.3, 0, 0.8),
+        "smug": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.gamma_corr, 1.1),
+    }
+    return effects.get(emotion, lambda c: c)(clip)
 
 def analyze_emotions(text):
-    emotions = set()
-    for char in text:
-        if char in EMOJI_EMOTION_MAP:
-            emotions.add(EMOJI_EMOTION_MAP[char])
-    return emotions
+    return {EMOJI_EMOTION_MAP[char] for char in text if char in EMOJI_EMOTION_MAP}
 
 def load_character_data():
     with open(CHARACTER_DATA_FILE, 'r', encoding='utf-8') as f:
@@ -132,9 +86,7 @@ def find_font():
 
 def get_character_color(character):
     color_data = CHARACTER_DATA.get(character, {}).get("color", DEFAULT_COLOR)
-    if isinstance(color_data, list) and len(color_data) >= 3:
-        return tuple(map(int, color_data[:3]))
-    return DEFAULT_COLOR
+    return tuple(map(int, color_data[:3])) if isinstance(color_data, list) and len(color_data) >= 3 else DEFAULT_COLOR
 
 def is_fullwidth(char):
     return unicodedata.east_asian_width(char) in 'WF'
@@ -178,14 +130,15 @@ def create_text_image(text, character, font_size, font_path, size, emotions, is_
     shadow_color = tuple(int(c * 0.4) for c in get_character_color(character))
     text_color = DEFAULT_COLOR
 
-    lines = wrap_text(text, width=TEXT_WRAP_WIDTH_VERTICAL if is_vertical else TEXT_WRAP_WIDTH_HORIZONTAL)
+    wrap_width = TEXT_WRAP_WIDTH['VERTICAL'] if is_vertical else TEXT_WRAP_WIDTH['HORIZONTAL']
+    lines = wrap_text(text, width=wrap_width)
 
     line_height = font.getbbox("A")[3]
     text_width = max(font.getbbox(line)[2] for line in lines)
     text_height = len(lines) * line_height
 
-    bubble_width = text_width + MARGIN_HORIZONTAL * 2
-    bubble_height = text_height + MARGIN_VERTICAL * 3
+    bubble_width = text_width + MARGIN['HORIZONTAL'] * 2
+    bubble_height = text_height + MARGIN['VERTICAL'] * 3
 
     bubble_x = (size[0] - bubble_width) // 2
     bubble_y = (size[1] - bubble_height) // 2
@@ -193,11 +146,11 @@ def create_text_image(text, character, font_size, font_path, size, emotions, is_
     if not is_vertical:
         bubble_y += TITLE_VERTICAL_POSITION
 
-    name_x, name_y = size[0] // 2, bubble_y - character_font.getbbox(character)[3] - MARGIN_VERTICAL - MARGIN_CHARACTER_NAME
+    name_x, name_y = size[0] // 2, bubble_y - character_font.getbbox(character)[3] - MARGIN['VERTICAL'] - MARGIN['CHARACTER_NAME']
 
     draw_bubble_with_shadow(draw, bubble_x, bubble_y, bubble_width, bubble_height, shadow_color, character_color)
 
-    x_text, y_text = bubble_x + MARGIN_HORIZONTAL, bubble_y + MARGIN_VERTICAL
+    x_text, y_text = bubble_x + MARGIN['HORIZONTAL'], bubble_y + MARGIN['VERTICAL']
     for line in lines:
         draw.text((x_text, y_text), line, font=font, fill=text_color)
         y_text += line_height
@@ -211,15 +164,14 @@ def create_title_image(title, font_path, font_size, size):
     draw = ImageDraw.Draw(img)
     title_font = ImageFont.truetype(font_path, font_size + FONT_SIZE_INCREASE)
 
-    title_lines = wrap_text(title, width=TEXT_WRAP_WIDTH_VERTICAL if size[0] < size[1] else TITLE_WRAP_WIDTH_HORIZONTAL)
+    wrap_width = TEXT_WRAP_WIDTH['VERTICAL'] if size[0] < size[1] else TEXT_WRAP_WIDTH['TITLE']
+    title_lines = wrap_text(title, width=wrap_width)
     line_height = title_font.getbbox("A")[3]
-
-    fixed_title_y = TITLE_VERTICAL_POSITION
 
     for i, line in enumerate(title_lines):
         title_width = title_font.getbbox(line)[2]
         title_x = (size[0] - title_width) // 2
-        title_pos = (title_x, fixed_title_y + i * line_height)
+        title_pos = (title_x, TITLE_VERTICAL_POSITION + i * line_height)
 
         for offset_x in range(-2, 3):
             for offset_y in range(-2, 3):
