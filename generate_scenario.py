@@ -61,16 +61,14 @@ def scrape_website(url: str) -> str:
     return "\n".join(main_content)
 
 def extract_github_readme(url: str) -> str:
-    readme_url = f"{url.rstrip('/')}/raw/main/README.md"
-    response = requests.get(readme_url)
-    if response.status_code != 200:
-        readme_url = f"{url.rstrip('/')}/raw/master/README.md"
-        response = requests.get(readme_url)
-    
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, 'html.parser')
-        lines = [line.strip() for line in soup.get_text().split('\n')]
-        return '\n'.join(line for line in lines if line and not line.startswith('```'))
+    for branch in ['main', 'master']:
+        for filename in ['README.md', 'README.rst']:
+            readme_url = f"{url.rstrip('/')}/raw/{branch}/{filename}"
+            response = requests.get(readme_url)
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'html.parser')
+                lines = [line.strip() for line in soup.get_text().split('\n')]
+                return '\n'.join(line for line in lines if line and not line.startswith('```'))
     return ""
 
 def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
@@ -90,7 +88,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
 
     prompt = f"""
 キャラクターの設定と会話に使用する話題に基づいて、{"話題に対する深い考察を行いながら自然で面白い" if mode in [1, 2] else "話題の内容を正確に説明するための"}対話を生成してください。
-なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、各発言は400文字以内とします。
+なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、感情表現に絵文字を多数使用して各発言は400文字以内とします。
 {"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
 
 対話の出力形式は以下のように1行目にタイトルを記載し、2行目以降に対話内容を記載してください：
@@ -124,6 +122,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
 ### 会話に使用する話題
 {content[:5000]}
     """
+    print(prompt)
 
     for retry in range(3):
         try:
@@ -132,7 +131,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
             for line in response.text.strip().split('\n'):
                 if ':' in line:
                     speaker, text = line.split(':', 1)
-                    speaker = speaker.replace("## タイトル", "タイトル")
+                    speaker = speaker.replace("## タイトル", "タイトル").replace("##  タイトル", "タイトル")
                     dialogue.append((speaker.strip(), correct_spelling(text.strip())))
             return dialogue
         except ValueError as e:

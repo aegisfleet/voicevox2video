@@ -4,6 +4,7 @@ from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip, vfx
 import os
 import json
 import unicodedata
+import emoji
 
 FONT_PATHS = [
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
@@ -27,6 +28,95 @@ TEXT_WRAP_WIDTH_VERTICAL = 30
 TEXT_WRAP_WIDTH_HORIZONTAL = 60
 TITLE_WRAP_WIDTH_HORIZONTAL = 50
 TITLE_VERTICAL_POSITION = 75
+
+EMOJI_EMOTION_MAP = {
+    "😊": "happy",
+    "😂": "happy",
+    "😆": "happy",
+    "😃": "happy",
+    "😄": "happy",
+    "😁": "happy",
+    "😅": "happy",
+    "😎": "happy",
+    "😋": "happy",
+    "🤗": "happy",
+    "😍": "love",
+    "🤩": "love",
+    "😘": "love",
+    "🥰": "love",
+    "❤️": "love",
+    "💕": "love",
+    "😢": "sad",
+    "😭": "sad",
+    "😞": "sad",
+    "😔": "sad",
+    "😟": "sad",
+    "😖": "sad",
+    "😩": "sad",
+    "😥": "sad",
+    "😵": "sad",
+    "💦": "sad",
+    "😡": "angry",
+    "😠": "angry",
+    "🤬": "angry",
+    "😤": "angry",
+    "😱": "surprised",
+    "😲": "surprised",
+    "🤯": "surprised",
+    "😳": "surprised",
+    "😬": "embarrassed",
+    "😨": "embarrassed",
+    "😴": "tired",
+    "🥱": "tired",
+    "🤔": "thinking",
+    "😐": "neutral",
+    "😑": "neutral",
+    "🙄": "neutral",
+    "😶": "neutral",
+    "🤨": "confused",
+    "😕": "confused",
+    "😟": "worried",
+    "😒": "unimpressed",
+    "😏": "smug",
+    "😉": "smug",
+    "💪": "smug",
+}
+
+def apply_emotion_effect(clip, emotion):
+    if emotion == "happy":
+        return clip.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 3))
+    elif emotion == "sad":
+        return clip.fx(vfx.colorx, 0.9)
+    elif emotion == "angry":
+        return clip.fx(vfx.colorx, 1.2).fx(vfx.lum_contrast, 0, 0, 2.0).fx(vfx.gamma_corr, 0.8)
+    elif emotion == "surprised":
+        return clip.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, 0, 0, 1.5)
+    elif emotion == "embarrassed":
+        return clip.fx(vfx.colorx, 0.8).fx(vfx.gamma_corr, 0.8)
+    elif emotion == "love":
+        return clip.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.2).fx(vfx.rotate, lambda t: np.sin(t * 8))
+    elif emotion == "tired":
+        return clip.fx(vfx.colorx, 0.5).fx(vfx.lum_contrast, 0, 0, 0.5)
+    elif emotion == "thinking":
+        return clip.fx(vfx.lum_contrast, 0, 0, 2.0)
+    elif emotion == "neutral":
+        return clip
+    elif emotion == "confused":
+        return clip.fx(vfx.colorx, 0.95).fx(vfx.lum_contrast, 0, 0, 1.0).fx(vfx.rotate, lambda t: 2 * np.sin(t * 8))
+    elif emotion == "worried":
+        return clip.fx(vfx.colorx, 0.6).fx(vfx.lum_contrast, 0, 0, 0.5)
+    elif emotion == "unimpressed":
+        return clip.fx(vfx.colorx, 0.9).fx(vfx.lum_contrast, -0.3, 0, 0.8)
+    elif emotion == "smug":
+        return clip.fx(vfx.colorx, 1.2).fx(vfx.gamma_corr, 1.1)
+    return clip
+
+def analyze_emotions(text):
+    emotions = set()
+    for char in text:
+        if char in EMOJI_EMOTION_MAP:
+            emotions.add(EMOJI_EMOTION_MAP[char])
+    return emotions
 
 def load_character_data():
     with open(CHARACTER_DATA_FILE, 'r', encoding='utf-8') as f:
@@ -78,7 +168,7 @@ def draw_character_name(draw, character, font, x, y, outline_color, text_color):
                 draw.text((name_pos[0] + offset_x, name_pos[1] + offset_y), character, font=font, fill=outline_color)
     draw.text(name_pos, character, font=font, fill=text_color)
 
-def create_text_image(text, character, font_size, font_path, size, is_vertical=False):
+def create_text_image(text, character, font_size, font_path, size, emotions, is_vertical=False):
     font = ImageFont.truetype(font_path, font_size)
     character_font = ImageFont.truetype(font_path, font_size + FONT_SIZE_INCREASE)
     img = Image.new('RGB', size, (0, 0, 0))
@@ -162,15 +252,24 @@ def create_video_with_subtitles(subtitle_text, character, duration=5, output_fil
     size = (720, 1280) if is_vertical else (1280, 720)
     font_path = find_font()
 
+    clean_subtitle_text = emoji.replace_emoji(subtitle_text, replace="").strip()
+    clean_title = emoji.replace_emoji(title, replace="").strip()
+    
+    emotions = analyze_emotions(subtitle_text)
+    print(f"感情: {emotions}")
+
     background = ColorClip(size=size, color=(0, 0, 0)).set_duration(duration)
-    text_img = create_text_image(subtitle_text, character, FONT_SIZE, font_path, size, is_vertical)
+    text_img = create_text_image(clean_subtitle_text, character, FONT_SIZE, font_path, size, emotions, is_vertical)
     text_clip = ImageClip(text_img).set_duration(duration)
     animated_text_clip = add_animation(text_clip, animation_type, is_vertical)
 
+    for emotion in emotions:
+        animated_text_clip = apply_emotion_effect(animated_text_clip, emotion)
+
     clips = [background, animated_text_clip]
 
-    if title:
-        title_img = create_title_image(title, font_path, FONT_SIZE, size)
+    if clean_title:
+        title_img = create_title_image(clean_title, font_path, FONT_SIZE, size)
         title_clip = ImageClip(title_img).set_duration(duration)
         clips.append(title_clip)
 
@@ -180,9 +279,23 @@ def create_video_with_subtitles(subtitle_text, character, duration=5, output_fil
     print(f"テロップ付き動画が生成されました: {output_file}")
 
 if __name__ == "__main__":
-    create_video_with_subtitles("これはテロップのテストです。VOICEVOXの音声と組み合わせます。", "四国めたん", 
-                                duration=5, output_file="tmp/sample_landscape.mp4", is_vertical=False,
-                                title="テストタイトル")
-    create_video_with_subtitles("これはテロップのテストです。VOICEVOXの音声と組み合わせます。", "四国めたん", 
-                                duration=5, output_file="tmp/sample_portrait.mp4", is_vertical=True,
-                                title="テストタイトル")
+    test_cases = [
+        {"emotion": "happy", "emoji": "😊", "title": "喜びのテストタイトル "},
+        {"emotion": "sad", "emoji": "😢", "title": "悲しみのテストタイトル "},
+        {"emotion": "angry", "emoji": "😡", "title": "怒りのテストタイトル "},
+        {"emotion": "surprised", "emoji": "😱", "title": "驚きのテストタイトル "},
+        {"emotion": "embarrassed", "emoji": "😨", "title": "恥ずかしさのテストタイトル "},
+        {"emotion": "love", "emoji": "😍", "title": "愛のテストタイトル "},
+        {"emotion": "tired", "emoji": "😴", "title": "疲労のテストタイトル "},
+        {"emotion": "thinking", "emoji": "🤔", "title": "思考のテストタイトル "},
+        {"emotion": "neutral", "emoji": "😐", "title": "無感情のテストタイトル "},
+        {"emotion": "confused", "emoji": "🤨", "title": "混乱のテストタイトル "},
+        {"emotion": "worried", "emoji": "😟", "title": "心配のテストタイトル "},
+        {"emotion": "unimpressed", "emoji": "😒", "title": "つまらなさのテストタイトル "},
+        {"emotion": "smug", "emoji": "😏", "title": "自信過剰のテストタイトル "},
+    ]
+
+    for i, case in enumerate(test_cases):
+        subtitle_text = f"これは{case['emotion']}のテストです。{case['emoji']} VOICEVOXの音声と組み合わせます。 "
+        output_file = f"tmp/{i}_sample_landscape_{case['emotion']}.mp4"
+        create_video_with_subtitles(subtitle_text, "四国めたん", duration=2, output_file=output_file, is_vertical=False, title=case['title'])

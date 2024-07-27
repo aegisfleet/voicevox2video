@@ -3,6 +3,7 @@ import json
 import os
 from pydub import AudioSegment
 from typing import Union, Dict, Any
+import emoji
 
 CHARACTERS_JSON = "./config/characters.json"
 
@@ -12,7 +13,7 @@ def generate_voice(text: str, character_name: str, output_file: str = "output.wa
         raise ValueError("VOICEVOX_API_HOST environment variable is not set.")
     base_url = f"http://{voicevox_api_host}:50021"
 
-    text = text.replace("。", "。 ").replace("、", "、 ")
+    text = emoji.replace_emoji(text.replace("。", "。 ").replace("、", "、 "), replace="").strip()
 
     character_config = load_character_config(character_name)
 

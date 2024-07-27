@@ -6,3 +6,4 @@ google-generativeai
 beautifulsoup4
 scipy
 chardet
+emoji
