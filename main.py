@@ -25,12 +25,7 @@ def load_character_config() -> Dict:
 CHARACTER_CONFIG = load_character_config()
 
 def create_audio_file(character: str, text: str, output_file: str) -> None:
-    char_config = CHARACTER_CONFIG[character]
-    generate_voice(text, speaker=char_config['speaker_id'], output_file=output_file, 
-                   speed_scale=char_config.get('speed_scale', 1.0),
-                   volume_scale=char_config.get('volume_scale', 1.0),
-                   intonation_scale=char_config.get('intonation_scale', 1.0))
-
+    generate_voice(text, character_name=character, output_file=output_file)
     process_audio_file(output_file)
 
 def process_audio_file(file_path: str) -> None:

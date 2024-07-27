@@ -4,7 +4,9 @@ import os
 from pydub import AudioSegment
 from typing import Union, Dict, Any
 
-def generate_voice(text: str, speaker: int = 3, output_file: str = "output.wav", speed_scale: float = 1.3, volume_scale: float = 3.5, intonation_scale: float = 1.0) -> None:
+CHARACTERS_JSON = "./config/characters.json"
+
+def generate_voice(text: str, character_name: str, output_file: str = "output.wav") -> None:
     voicevox_api_host = os.getenv('VOICEVOX_API_HOST', 'localhost')
     if not voicevox_api_host:
         raise ValueError("VOICEVOX_API_HOST environment variable is not set.")
@@ -12,17 +14,23 @@ def generate_voice(text: str, speaker: int = 3, output_file: str = "output.wav",
 
     text = text.replace("。", "。 ").replace("、", "、 ")
 
-    query_payload = {"text": text, "speaker": speaker}
+    character_config = load_character_config(character_name)
+
+    query_payload = {"text": text, "speaker": character_config["speaker_id"]}
     query_data = send_request(f"{base_url}/audio_query", method="POST", params=query_payload)
 
     if isinstance(query_data, dict):
         query_data.update({
-            "speedScale": speed_scale,
-            "volumeScale": volume_scale,
-            "intonationScale": intonation_scale
+            "speedScale": character_config["speed_scale"],
+            "volumeScale": character_config["volume_scale"],
+            "intonationScale": character_config["intonation_scale"],
+            "prePhonemeLength": character_config["pre_phoneme_length"],
+            "postPhonemeLength": character_config["post_phoneme_length"],
+            "emphasisScale": character_config["emphasis_scale"],
+            "breathScale": character_config["breath_scale"]
         })
 
-        synthesis_payload = {"speaker": speaker}
+        synthesis_payload = {"speaker": character_config["speaker_id"]}
         audio_data = send_request(
             f"{base_url}/synthesis",
             method="POST",
@@ -60,5 +68,16 @@ def save_audio(audio_data: bytes, output_file: str) -> None:
 
     os.remove(temp_file)
 
+def load_character_config(character_name: str) -> Dict[str, Any]:
+    with open(CHARACTERS_JSON, "r", encoding="utf-8") as f:
+        characters = json.load(f)
+
+    if character_name not in characters:
+        raise ValueError(f"キャラクター '{character_name}' は設定ファイルに見つかりません。")
+
+    return characters[character_name]
+
 if __name__ == "__main__":
-    generate_voice("こんにちは、VOICEVOXの音声です。")
+    generate_voice("こんにちは、VOICEVOXの音声です。", "ずんだもん", "tmp/zundamon_greeting.wav")
+    generate_voice("四国めたんの声をお届けします。", "四国めたん", "tmp/shikokumetan_voice.wav")
+    generate_voice("春日部つむぎだYO！", "春日部つむぎ", "tmp/tsumugi_voice.wav")

@@ -3,110 +3,198 @@
     "first_person": "わたくし",
     "personality": "高等部二年生の女の子。常に金欠。趣味は中二病妄想。誰にでも遠慮せず、若干ツンデレ気味。",
     "speech_style": "基本的にタメ口",
-    "color": [223, 76, 148],
+    "color": [
+      223,
+      76,
+      148
+    ],
     "speaker_id": 2,
     "speed_scale": 1.3,
-    "volume_scale": 3.2,
-    "intonation_scale": 1.3
+    "volume_scale": 3.0,
+    "intonation_scale": 1.3,
+    "pre_phoneme_length": 0.08,
+    "post_phoneme_length": 0.12,
+    "emphasis_scale": 1.1,
+    "breath_scale": 0.7
   },
   "ずんだもん": {
     "first_person": "僕",
     "personality": "ずんだ餅の精。やや不幸属性が備わっており、ないがしろにされることもしばしば。趣味はその辺をふらふらすること、自分を大きく見せること。",
     "speech_style": "語尾に必ず「～のだ」「～なのだ」をつけて喋る",
-    "color": [51, 166, 94],
+    "color": [
+      51,
+      166,
+      94
+    ],
     "speaker_id": 3,
     "speed_scale": 1.4,
-    "volume_scale": 3.3,
-    "intonation_scale": 1.4
+    "volume_scale": 3.1,
+    "intonation_scale": 1.4,
+    "pre_phoneme_length": 0.05,
+    "post_phoneme_length": 0.08,
+    "emphasis_scale": 1.2,
+    "breath_scale": 0.8
   },
   "春日部つむぎ": {
     "first_person": "あーし",
     "personality": "埼玉県内の高校に通うギャルの女の子。やんちゃに見えて実は真面目な一面もある。",
     "speech_style": "丁寧語を使用",
-    "color": [255, 153, 20],
+    "color": [
+      255,
+      153,
+      20
+    ],
     "speaker_id": 8,
     "speed_scale": 1.2,
-    "volume_scale": 3.2,
-    "intonation_scale": 1.2
+    "volume_scale": 3.0,
+    "intonation_scale": 1.2,
+    "pre_phoneme_length": 0.1,
+    "post_phoneme_length": 0.15,
+    "emphasis_scale": 1.0,
+    "breath_scale": 0.9
   },
   "雨晴はう": {
     "first_person": "僕",
     "personality": "現役看護師です！看護師のあれこれお伝えします！",
     "speech_style": "元気で明るい口調",
-    "color": [29, 134, 174],
+    "color": [
+      29,
+      134,
+      174
+    ],
     "speaker_id": 10,
     "speed_scale": 1.3,
-    "volume_scale": 3.3,
-    "intonation_scale": 1.3
+    "volume_scale": 3.2,
+    "intonation_scale": 1.3,
+    "pre_phoneme_length": 0.08,
+    "post_phoneme_length": 0.1,
+    "emphasis_scale": 1.15,
+    "breath_scale": 0.85
   },
   "波音リツ": {
     "first_person": "あたし",
     "personality": "クール。論理的で冷静な性格。",
     "speech_style": "簡潔で冷静な話し方",
-    "color": [252, 78, 50],
+    "color": [
+      252,
+      78,
+      50
+    ],
     "speaker_id": 9,
     "speed_scale": 1.1,
-    "volume_scale": 3.1,
-    "intonation_scale": 1.0
+    "volume_scale": 2.9,
+    "intonation_scale": 1.0,
+    "pre_phoneme_length": 0.12,
+    "post_phoneme_length": 0.15,
+    "emphasis_scale": 0.95,
+    "breath_scale": 0.75
   },
   "玄野武宏": {
     "first_person": "俺",
     "personality": "サッパリした青年。やや短気だが面倒見は良い。熱血漢。正義感が強く、情熱的。",
     "speech_style": "力強く、熱意のこもった話し方",
-    "color": [26, 161, 142],
+    "color": [
+      26,
+      161,
+      142
+    ],
     "speaker_id": 11,
     "speed_scale": 1.3,
-    "volume_scale": 3.4,
-    "intonation_scale": 1.5
+    "volume_scale": 3.3,
+    "intonation_scale": 1.5,
+    "pre_phoneme_length": 0.06,
+    "post_phoneme_length": 0.1,
+    "emphasis_scale": 1.25,
+    "breath_scale": 0.9
   },
   "白上虎太郎": {
     "first_person": "おれ",
     "personality": "まっすぐで人懐っこい青年。愛嬌はあるものの少しおばか。",
     "speech_style": "元気で明るい口調",
-    "color": [153, 208, 43],
+    "color": [
+      153,
+      208,
+      43
+    ],
     "speaker_id": 12,
     "speed_scale": 1.4,
-    "volume_scale": 3.3,
-    "intonation_scale": 1.4
+    "volume_scale": 3.2,
+    "intonation_scale": 1.4,
+    "pre_phoneme_length": 0.08,
+    "post_phoneme_length": 0.11,
+    "emphasis_scale": 1.2,
+    "breath_scale": 0.85
   },
   "青山龍星": {
     "first_person": "オレ",
     "personality": "とにかく大柄で無骨な青年。寡黙で冷静なストッパー枠。",
     "speech_style": "自信に満ちた、少し尊大な話し方",
-    "color": [56, 108, 176],
+    "color": [
+      56,
+      108,
+      176
+    ],
     "speaker_id": 13,
     "speed_scale": 1.1,
-    "volume_scale": 3.2,
-    "intonation_scale": 1.1
+    "volume_scale": 3.0,
+    "intonation_scale": 1.1,
+    "pre_phoneme_length": 0.1,
+    "post_phoneme_length": 0.14,
+    "emphasis_scale": 1.05,
+    "breath_scale": 0.8
   },
   "冥鳴ひまり": {
     "first_person": "私",
     "personality": "冥界から来た死神。可愛いものに目がない。ミステリアスな少女。",
     "speech_style": "優しくて清楚な話し方",
-    "color": [164, 90, 170],
+    "color": [
+      164,
+      90,
+      170
+    ],
     "speaker_id": 14,
     "speed_scale": 1.1,
-    "volume_scale": 3.1,
-    "intonation_scale": 1.2
+    "volume_scale": 2.8,
+    "intonation_scale": 1.2,
+    "pre_phoneme_length": 0.11,
+    "post_phoneme_length": 0.16,
+    "emphasis_scale": 1.0,
+    "breath_scale": 0.7
   },
   "もち子さん": {
     "first_person": "もち子",
     "personality": "福島県生まれのプラモ好き犬系ヲタ娘。",
     "speech_style": "穏やかで優しい話し方",
-    "color": [29, 134, 174],
+    "color": [
+      29,
+      134,
+      174
+    ],
     "speaker_id": 20,
     "speed_scale": 1.2,
-    "volume_scale": 3.2,
-    "intonation_scale": 1.2
+    "volume_scale": 3.1,
+    "intonation_scale": 1.2,
+    "pre_phoneme_length": 0.09,
+    "post_phoneme_length": 0.13,
+    "emphasis_scale": 1.1,
+    "breath_scale": 0.8
   },
   "剣崎雌雄": {
     "first_person": "僕",
     "personality": "人類滅亡を目論む医療用メスの付喪神。",
     "speech_style": "分析的で冷静な話し方",
-    "color": [51, 166, 94],
+    "color": [
+      51,
+      166,
+      94
+    ],
     "speaker_id": 21,
     "speed_scale": 1.1,
-    "volume_scale": 3.0,
-    "intonation_scale": 0.9
+    "volume_scale": 2.9,
+    "intonation_scale": 0.9,
+    "pre_phoneme_length": 0.11,
+    "post_phoneme_length": 0.15,
+    "emphasis_scale": 0.9,
+    "breath_scale": 0.75
   }
 }
