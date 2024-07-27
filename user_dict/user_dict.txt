@@ -49,3 +49,7 @@ Linkspector,リンクスペクター,0
 Truffle,トゥラフル,0
 Security,セキュリティ,0
 Cloud9,クラウドナイン,0
+Python,パイソン,0
+MoviePy,ムービーパイ,0
+Folly,フォリー,0
+Boost,ブースト,0
