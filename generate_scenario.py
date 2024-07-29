@@ -7,6 +7,7 @@ import google.generativeai as genai
 import argparse
 import random
 import chardet
+import re
 
 def load_json_config(filename: str) -> dict:
     config_path = os.path.join('config', filename)
@@ -61,6 +62,11 @@ def scrape_website(url: str) -> str:
     return "\n".join(main_content)
 
 def extract_github_readme(url: str) -> str:
+    github_pattern = r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+'
+    
+    if not re.match(github_pattern, url):
+        return ""
+
     for branch in ['main', 'master']:
         for filename in ['README.md', 'README.rst']:
             readme_url = f"{url.rstrip('/')}/raw/{branch}/{filename}"
@@ -152,7 +158,7 @@ def read_file_with_encoding(file_path: str) -> str:
 def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
-        content = extract_github_readme(url_or_file) if "github.com" in url_or_file else scrape_website(url_or_file)
+        content = extract_github_readme(url_or_file) if re.match(r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+', url_or_file) else scrape_website(url_or_file)
     else:
         print(f"Loading content from file: {url_or_file}")
         content = read_file_with_encoding(url_or_file)
