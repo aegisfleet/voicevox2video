@@ -1,12 +1,13 @@
 # VOICEVOX Video Generator
 
-このプロジェクトは、指定されたウェブサイト、GitHubリポジトリ、テキストファイル、または任意のテキストファイルからコンテンツを取得し、そのコンテンツに基づいて対話を生成し、VOICEVOXを使用して音声を合成し、最終的に字幕付きの動画を作成するツールです。
+このプロジェクトは、指定されたウェブサイト、GitHubリポジトリ、YouTubeビデオ、テキストファイル、または任意のテキストファイルからコンテンツを取得し、そのコンテンツに基づいて対話を生成し、VOICEVOXを使用して音声を合成し、最終的に字幕付きの動画を作成するツールです。
 
 https://github.com/user-attachments/assets/8f00ca43-a764-4756-bca0-6d5eb74c3d8b
 
 ## 機能
 
 - ウェブサイトやGitHubリポジトリからのコンテンツスクレイピング
+- YouTubeビデオの音声トランスクリプトからのコンテンツ取得
 - テキストファイルからの対話読み込み
 - Google Gemini AIを使用した対話シナリオの生成
   - 長さの異なる対話（短い/長い）の生成
@@ -92,7 +93,7 @@ https://github.com/user-attachments/assets/8f00ca43-a764-4756-bca0-6d5eb74c3d8b
 python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v] [-b BGM_FILE]
 ```
 
-- `url_or_file`: URL、GitHubリポジトリ、テキストファイルのパス、または任意のテキストファイルのパス（必須）
+- `url_or_file`: URL（ウェブサイト、GitHubリポジトリ、YouTubeビデオ）、テキストファイルのパス、または任意のテキストファイルのパス（必須）
 - `-c1`, `--char1`: キャラクター1の名前（省略可能、デフォルト: "ずんだもん"）
 - `-c2`, `--char2`: キャラクター2の名前（省略可能、デフォルト: "四国めたん"）
 - `-m`, `--mode`: 対話内容のモード（省略可能、デフォルト: 1）
@@ -136,7 +137,13 @@ python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v] [
    python3 main.py https://github.com/username/repository -c1 ずんだもん -c2 春日部つむぎ -m 2 -v
    ```
 
-3. テキストファイルを指定して実行（横動画）：
+3. YouTubeビデオのURLを指定して実行（短い対話、横動画）：
+
+   ```bash
+   python3 main.py https://www.youtube.com/watch?v=VIDEO_ID
+   ```
+
+4. テキストファイルを指定して実行（横動画）：
 
    ```bash
    python3 main.py path/to/your/dialogue.txt
@@ -153,15 +160,13 @@ python3 main.py [url_or_file] [-c1 CHARACTER1] [-c2 CHARACTER2] [-m MODE] [-v] [
    キャラクター2: [キャラクター2の発言]
    ```
 
-4. 任意のテキストファイルを指定して実行（対話シナリオを生成）：
+5. 任意のテキストファイルを指定して実行（対話シナリオを生成）：
 
    ```bash
    python3 main.py path/to/your/content.txt
    ```
 
-   この場合、指定されたテキストファイルの内容に基づいて対話シナリオが生成され、自動的にタイトルが付与されます。
-
-5. カスタムBGMを指定して実行：
+6. カスタムBGMを指定して実行：
 
    ```bash
    python3 main.py https://example.com -b path/to/your/custom_bgm.mp3
@@ -198,19 +203,25 @@ python3 generate_scenario.py https://example.com -c1 ずんだもん -c2 春日�
 graph TD
     A[入力: URL / ファイル] --> B{入力タイプ}
     B -->|URL| C[ウェブスクレイピング]
-    B -->|ファイル| D[ファイル読み込み]
-    D -->|任意のテキスト| E
-    C --> E[Google Gemini AIで対話生成]
-    D -->|対話シナリオ| F
-    E --> F[VOICEVOXで音声合成]
-    F --> G[音声のノイズ除去]
-    G --> H[字幕付き動画生成]
-    H --> I[BGM自動選択/追加]
-    I --> J[感情に基づくエフェクト適用]
-    J --> K[最終動画出力]
+    B -->|YouTube URL| D[YouTube音声トランスクリプト取得]
+    B -->|ファイル| E[ファイル読み込み]
+    C --> F[Google Gemini AIで対話生成]
+    D --> F
+    E -->|任意のテキスト| F
+    E -->|対話シナリオ| G
+    F --> G[VOICEVOXで音声合成]
+    G --> H[音声のノイズ除去]
+    H --> I[字幕付き動画生成]
+    I --> J[BGM自動選択/追加]
+    J --> K[感情に基づくエフェクト適用]
+    K --> L[最終動画出力]
 ```
 
 ## 新機能
+
+### Ver1.3.0
+
+1. **YouTube動画からの対話シナリオ生成**: YouTubeビデオのURLを入力として使用し、その音声トランスクリプトから対話シナリオを生成する機能を追加しました。
 
 ### Ver1.2.0
 
@@ -247,3 +258,4 @@ graph TD
 - このプロジェクトはVOICEVOXの利用規約に従って使用してください。
 - 生成されたコンテンツの著作権や利用に関する責任は利用者にあります。
 - スクレイピングを行う際は、対象ウェブサイトの利用規約を遵守してください。
+- YouTubeの動画を使用する際は、YouTubeの利用規約を遵守してください。
