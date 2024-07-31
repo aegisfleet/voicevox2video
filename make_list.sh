@@ -38,7 +38,7 @@ append_source_code() {
     if [[ "$line" != "./$output_file" ]] && [[ "$line" != "./$0" ]] && ! is_binary_file "$line"; then
       local file_size
       file_size=$(stat -c%s "$line")
-      if (( file_size <= 10240 )); then
+      if (( file_size <= 20480 )); then
         {
           echo "\`\`\`file:$line"
           cat "$line"
