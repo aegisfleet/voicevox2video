@@ -8,6 +8,8 @@ import argparse
 import random
 import chardet
 import re
+from langchain.document_loaders import YoutubeLoader
+from urllib.parse import urlparse
 
 def load_json_config(filename: str) -> dict:
     config_path = os.path.join('config', filename)
@@ -77,6 +79,28 @@ def extract_github_readme(url: str) -> str:
                 return '\n'.join(line for line in lines if line and not line.startswith('```'))
     return ""
 
+def is_youtube_url(url: str) -> bool:
+    try:
+        parsed_url = urlparse(url)
+        if parsed_url.netloc == 'youtube.com' or parsed_url.netloc == 'www.youtube.com':
+            return True
+        if parsed_url.netloc == 'youtu.be':
+            return True
+        if parsed_url.path.startswith('/shorts/'):
+            return True
+        return False
+    except ValueError:
+        return False
+
+def get_youtube_content(url: str) -> str:
+    try:
+        loader = YoutubeLoader.from_youtube_url(youtube_url=url, language="ja")
+        docs = loader.load()
+        return "\n".join([doc.page_content for doc in docs])
+    except Exception as e:
+        print(f"YouTubeコンテンツの取得中にエラーが発生しました: {e}")
+        return ""
+
 def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
     return character_interactions.get(f"{char1},{char2}", (char2, char2))
 
@@ -126,7 +150,7 @@ def generate_dialogue(content: str, char1: str, char2: str, mode: int) -> List[T
 - 相手のことを「{char1_call}」と呼ぶ
 
 ### 会話に使用する話題
-{content[:5000]}
+{content[:10000]}
     """
     print(prompt)
 
@@ -158,7 +182,12 @@ def read_file_with_encoding(file_path: str) -> str:
 def generate_scenario(url_or_file: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
     if url_or_file.startswith("http"):
         print(f"Scraping content from: {url_or_file}")
-        content = extract_github_readme(url_or_file) if re.match(r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+', url_or_file) else scrape_website(url_or_file)
+        if is_youtube_url(url_or_file):
+            content = get_youtube_content(url_or_file)
+        elif re.match(r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+', url_or_file):
+            content = extract_github_readme(url_or_file)
+        else:
+            content = scrape_website(url_or_file)
     else:
         print(f"Loading content from file: {url_or_file}")
         content = read_file_with_encoding(url_or_file)

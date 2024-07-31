@@ -8,3 +8,4 @@ scipy
 chardet
 pydub
 emoji
+langchain-community
