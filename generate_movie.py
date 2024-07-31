@@ -53,7 +53,7 @@ EMOJI_EMOTION_MAP = {
 
 def apply_emotion_effect(clip, emotion):
     effects = {
-        "happy": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 3)),
+        "happy": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 2)),
         "sad": lambda c: c.fx(vfx.colorx, 0.9),
         "angry": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.lum_contrast, 0, 0, 2.0).fx(vfx.gamma_corr, 0.8),
         "surprised": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, 0, 0, 1.5),
