@@ -9,3 +9,4 @@ chardet
 pydub
 emoji
 langchain-community
+PyPDF2
