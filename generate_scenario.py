@@ -10,6 +10,7 @@ import chardet
 import re
 from langchain.document_loaders import YoutubeLoader
 from urllib.parse import urlparse
+from PyPDF2 import PdfReader
 
 CONFIG_DIR = 'config'
 OUTPUT_DIR = 'output'
@@ -176,9 +177,38 @@ class DialogueGenerator:
                 print(f"リトライ {retry+1} 回目...")
         return []
 
+class PDFHandler:
+    @staticmethod
+    def extract_text_from_pdf(file_path: str) -> str:
+        with open(file_path, 'rb') as file:
+            pdf_reader = PdfReader(file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+        return PDFHandler.clean_pdf_text(text)
+
+    @staticmethod
+    def clean_pdf_text(text: str) -> str:
+        text = re.sub(r'\n\s*-?\s*\d+\s*-?\s*\n', '\n', text)
+        text = re.sub(r'\n\s*Page\s*\d+\s*\n', '\n', text, flags=re.IGNORECASE)
+        text = re.sub(r'\n\s*\n', '\n\n', text)
+        text = re.sub(r'\s+$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'(?<![.!?。！？])\n(?=[a-zぁ-ん])', ' ', text)
+        text = re.sub(r'^\s*[●○・]\s*', '\n• ', text, flags=re.MULTILINE)
+        text = re.sub(r'^\s*(\d+)[.．、]\s*', r'\n\1. ', text, flags=re.MULTILINE)
+        text = re.sub(r'^([A-Z0-9][A-Z0-9 ]+)$', r'\n\n## \1\n', text, flags=re.MULTILINE)
+        text = re.sub(r'([a-zA-Z0-9])([+\-*/=])', r'\1 \2 ', text)
+        text = re.sub(r'([+\-*/=])([a-zA-Z0-9])', r' \1 \2', text)
+        text = text.strip()
+
+        return text
+
 class FileHandler:
     @staticmethod
     def read_file_with_encoding(file_path: str) -> str:
+        if file_path.lower().endswith('.pdf'):
+            return PDFHandler.extract_text_from_pdf(file_path)
+        
         with open(file_path, 'rb') as f:
             raw_data = f.read()
         encoding = chardet.detect(raw_data)['encoding']
