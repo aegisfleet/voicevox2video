@@ -87,6 +87,38 @@ class WebScraper:
                     return '\n'.join(line for line in lines if line and not line.startswith('```'))
         return ""
 
+    @staticmethod
+    def is_amazon_url(url: str) -> bool:
+        parsed_url = urlparse(url)
+        return parsed_url.netloc in ['amazon.com', 'www.amazon.com', 'amazon.co.jp', 'www.amazon.co.jp', 'amzn.to']
+
+    @staticmethod
+    def scrape_amazon_product(url: str) -> str:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        title = soup.find('span', {'id': 'productTitle'})
+        price = soup.find('span', {'class': 'a-price-whole'})
+        description = soup.find('div', {'id': 'productDescription'})
+        features = soup.find('div', {'id': 'feature-bullets'})
+
+        product_info = []
+        if title:
+            product_info.append(f"Title: {title.text.strip()}")
+        if price:
+            product_info.append(f"Price: {price.text.strip()}")
+        if description:
+            product_info.append(f"Description: {description.text.strip()}")
+        if features:
+            product_info.append("Features:")
+            for li in features.find_all('li'):
+                product_info.append(f"- {li.text.strip()}")
+
+        return "\n".join(product_info)
+
 class YouTubeHandler:
     @staticmethod
     def is_youtube_url(url: str) -> bool:
@@ -239,6 +271,8 @@ class ScenarioGenerator:
                 content = YouTubeHandler.get_youtube_content(url_or_file)
             elif re.match(r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+', url_or_file):
                 content = WebScraper.extract_github_readme(url_or_file)
+            elif WebScraper.is_amazon_url(url_or_file):
+                content = WebScraper.scrape_amazon_product(url_or_file)
             else:
                 content = WebScraper.scrape_website(url_or_file)
         else:
