@@ -58,10 +58,17 @@ class DialogueGenerator:
     def generate_dialogue(self, content: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
         char1_call, char2_call = self.get_character_interaction(char1, char2)
 
+        if mode in [5, 6]:
+            dialogue_type = "商品を情報を正確に紹介する"
+        elif mode in [1, 2]:
+            dialogue_type = "話題に対する深い考察を行いながら自然で面白い"
+        else:
+            dialogue_type = "話題の内容を正確に説明するための"
+
         prompt = f"""
-キャラクターの設定と会話に使用する話題に基づいて、{"話題に対する深い考察を行いながら自然で面白い" if mode in [1, 2] else "話題の内容を正確に説明するための"}対話を生成してください。
+キャラクターの設定と会話に使用する話題に基づいて、{dialogue_type}対話を生成してください。
 なお、「{char1}」が質問して「{char2}」が回答する形で対話を行い、感情表現に絵文字を多数使用して各発言は400文字以内とします。
-{"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4] else "会話は必ず4回のやりとりまでに制限してください。"}
+{"対話は特に制限を設けず、話題から逸れない形で可能な限り長いシナリオを作成してください。" if mode in [2, 4, 6] else "会話は必ず4回のやりとりまでに制限してください。"}
 
 対話の出力形式は以下のように1行目にタイトル、2行目に対話の雰囲気、3行目以降に対話内容を記載してください：
 ...
@@ -144,7 +151,7 @@ def main():
     parser.add_argument("url_or_file", help="URLまたはファイルパス")
     parser.add_argument("-c1", "--char1", help="キャラクター1")
     parser.add_argument("-c2", "--char2", help="キャラクター2")
-    parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
+    parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4, 5, 6], default=1, help="対話モード (デフォルト: 1)")
 
     args = parser.parse_args()
 
