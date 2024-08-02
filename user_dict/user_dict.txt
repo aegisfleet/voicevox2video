@@ -53,3 +53,5 @@ Python,パイソン,0
 MoviePy,ムービーパイ,0
 Folly,フォリー,0
 Boost,ブースト,0
+Amazon,アマゾン,0
+HEPA,ヘパ,0
