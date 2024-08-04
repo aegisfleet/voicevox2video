@@ -1,10 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
-from langchain.document_loaders import YoutubeLoader
+from langchain_community.document_loaders import YoutubeLoader
 from urllib.parse import urlparse
 from PyPDF2 import PdfReader
 import re
 import chardet
+import sys
 
 class WebScraper:
     @staticmethod
@@ -91,7 +92,7 @@ class YouTubeHandler:
     @staticmethod
     def get_youtube_content(url: str) -> str:
         try:
-            loader = YoutubeLoader.from_youtube_url(youtube_url=url, language="ja")
+            loader = YoutubeLoader.from_youtube_url(url, language=["en", "ja"])
             docs = loader.load()
             return "\n".join([doc.page_content for doc in docs])
         except Exception as e:
@@ -155,17 +156,25 @@ class ContentLoader:
             print(f"警告: {encoding}でのデコードに失敗しました。UTF-8で再試行します。")
             return raw_data.decode('utf-8')
 
-if __name__ == "__main__":
-    test_cases = [
-        {"url_or_file": "scenario/generated_dialogue_sample.txt"},
-        {"url_or_file": "README.md"},
-        {"url_or_file": "scenario/demo.pdf"},
-        {"url_or_file": "https://www.yahoo.co.jp/"},
-        {"url_or_file": "https://github.com/aegisfleet/voicevox2video"},
-        {"url_or_file": "https://youtu.be/oWGPJ7PHB8w"},
-        {"url_or_file": "https://www.amazon.co.jp/dp/B00NTCH52W"},
-    ]
+def main():
+    if len(sys.argv) > 1:
+        url_or_file = sys.argv[1]
+        content = ContentLoader.load_content(url_or_file)
+        print(f"Content:\n{content}")
+    else:
+        test_cases = [
+            {"url_or_file": "scenario/generated_dialogue_sample.txt"},
+            {"url_or_file": "README.md"},
+            {"url_or_file": "scenario/demo.pdf"},
+            {"url_or_file": "https://www.yahoo.co.jp/"},
+            {"url_or_file": "https://github.com/aegisfleet/voicevox2video"},
+            {"url_or_file": "https://youtu.be/oWGPJ7PHB8w"},
+            {"url_or_file": "https://www.amazon.co.jp/dp/B00NTCH52W"},
+        ]
 
-    for i, case in enumerate(test_cases):
-        content = ContentLoader.load_content(f"{case['url_or_file']}")
-        print(f"Content {i}: {content}")
+        for i, case in enumerate(test_cases):
+            content = ContentLoader.load_content(case['url_or_file'])
+            print(f"Content {i}: {content}")
+
+if __name__ == "__main__":
+    main()
