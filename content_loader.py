@@ -25,17 +25,24 @@ class APIKeyManager:
             raise SystemExit("エラー: API キーが見つかりません。")
         return api_key
 
-class WebScraper:
+class GeminiHandler:
+    model = None
+
     @classmethod
     def initialize(cls, api_key: str):
         genai.configure(api_key=api_key)
         cls.model = genai.GenerativeModel(model_name="gemini-1.5-flash")
 
     @classmethod
-    def scrape_website(cls, url: str) -> str:
-        if not hasattr(cls, 'model'):
-            raise RuntimeError("WebScraper が初期化されていません。まず WebScraper.initialize(api_key) を呼び出してください。")
+    def generate_content(cls, prompt: str) -> str:
+        if not cls.model:
+            raise RuntimeError("GeminiHandler が初期化されていません。まず GeminiHandler.initialize(api_key) を呼び出してください。")
+        response = cls.model.generate_content(prompt)
+        return response.text.strip() if response.text else "コンテンツの生成に失敗しました。"
 
+class WebScraper:
+    @classmethod
+    def scrape_website(cls, url: str) -> str:
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
         text_content = soup.get_text(separator=' ', strip=True)
@@ -51,12 +58,7 @@ Webページのコンテンツ:
 {text_content[:10000]}
         """
 
-        response = cls.model.generate_content(prompt)
-        
-        if response.text:
-            return response.text.strip()
-        else:
-            return "コンテンツの抽出に失敗しました。"
+        return GeminiHandler.generate_content(prompt)
 
     @staticmethod
     def extract_github_readme(url: str) -> str:
@@ -87,25 +89,27 @@ Webページのコンテンツ:
         }
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser')
+        text_content = soup.get_text(separator=' ', strip=True)
+        print(text_content[:10000])
+        return WebScraper.format_amazon_product(text_content)
 
-        title = soup.find('span', {'id': 'productTitle'})
-        price = soup.find('span', {'class': 'a-price-whole'})
-        description = soup.find('div', {'id': 'productDescription'})
-        features = soup.find('div', {'id': 'feature-bullets'})
+    @staticmethod
+    def format_amazon_product(raw_product_info: str) -> str:
+        prompt = f"""
+以下はAmazon製品ページからスクレイピングした生の情報です。この情報を読みやすく整形してください。
+以下の点に注意して整形を行ってください：
 
-        product_info = []
-        if title:
-            product_info.append(f"Title: {title.text.strip()}")
-        if price:
-            product_info.append(f"Price: {price.text.strip()}")
-        if description:
-            product_info.append(f"Description: {description.text.strip()}")
-        if features:
-            product_info.append("Features:")
-            for li in features.find_all('li'):
-                product_info.append(f"- {li.text.strip()}")
+1. 製品タイトルを適切に強調する
+2. 価格情報を明確に表示する
+3. 製品説明を適切な段落に分ける
+4. 特徴や機能を箇条書きで整理する
+5. 重要な情報を強調し、冗長な部分を簡潔にする
+6. 全体の構造を維持しつつ、読みやすさを向上させる
 
-        return "\n".join(product_info)
+Amazon製品情報:
+{raw_product_info}
+        """
+        return GeminiHandler.generate_content(prompt)
 
 class YouTubeHandler:
     @staticmethod
@@ -121,10 +125,29 @@ class YouTubeHandler:
         try:
             loader = YoutubeLoader.from_youtube_url(url, language=["en", "ja"])
             docs = loader.load()
-            return "\n".join([doc.page_content for doc in docs])
+            raw_transcript = "\n".join([doc.page_content for doc in docs])
+            return YouTubeHandler.format_transcript(raw_transcript)
         except Exception as e:
             print(f"YouTubeコンテンツの取得中にエラーが発生しました: {e}")
             return ""
+
+    @staticmethod
+    def format_transcript(raw_transcript: str) -> str:
+        prompt = f"""
+以下はYouTube動画の生のトランスクリプトです。このトランスクリプトを読みやすく整形してください。
+以下の点に注意して整形を行ってください：
+
+1. 適切な段落分けを行う
+2. 句読点を適切に配置する
+3. 明らかな文法エラーを修正する
+4. 話者の変更がある場合は、新しい行で表示する
+5. 冗長な繰り返しや言い間違いを削除する
+6. 全体の流れを損なわない程度に、簡潔で明瞭な文章に整える
+
+生のトランスクリプト:
+{raw_transcript}
+        """
+        return GeminiHandler.generate_content(prompt)
 
 class PDFHandler:
     @staticmethod
@@ -134,41 +157,31 @@ class PDFHandler:
             text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text() + "\n"
-        return PDFHandler.clean_pdf_text(text)
+        return PDFHandler.format_pdf_text(text)
 
     @staticmethod
-    def clean_pdf_text(text: str) -> str:
-        text = re.sub(r'\n\s*-?\s*\d+\s*-?\s*\n', '\n', text)
-        text = re.sub(r'\n\s*Page\s*\d+\s*\n', '\n', text, flags=re.IGNORECASE)
-        text = re.sub(r'\n\s*\n', '\n\n', text)
-        text = re.sub(r'\s+$', '', text, flags=re.MULTILINE)
-        text = re.sub(r'(?<![.!?。！？])\n(?=[a-zぁ-ん])', ' ', text)
-        text = re.sub(r'^\s*[●○・]\s*', '\n• ', text, flags=re.MULTILINE)
-        text = re.sub(r'^\s*(\d+)[.．、]\s*', r'\n\1. ', text, flags=re.MULTILINE)
-        text = re.sub(r'^([A-Z0-9][A-Z0-9 ]+)$', r'\n\n## \1\n', text, flags=re.MULTILINE)
-        text = re.sub(r'([a-zA-Z0-9])([+\-*/=])', r'\1 \2 ', text)
-        text = re.sub(r'([+\-*/=])([a-zA-Z0-9])', r' \1 \2', text)
-        text = text.strip()
+    def format_pdf_text(raw_text: str) -> str:
+        prompt = f"""
+以下はPDFから抽出した生のテキストです。このテキストを読みやすく整形してください。
+以下の点に注意して整形を行ってください：
 
-        return text
+1. 適切な段落分けを行う
+2. 句読点を適切に配置する
+3. 見出しや小見出しを識別し、適切に強調する
+4. 箇条書きや番号付きリストを適切に整形する
+5. ページ番号や不要なヘッダー・フッター情報を削除する
+6. 数式や表が含まれている場合は、可能な限り整形して読みやすくする
+7. 全体の構造を維持しつつ、読みやすさを向上させる
+
+PDFから抽出した生のテキスト:
+{raw_text[:10000]}
+        """
+        return GeminiHandler.generate_content(prompt)
 
 class ContentLoader:
     def __init__(self):
-        self.api_key = self.get_api_key()
-        WebScraper.initialize(self.api_key)
-
-    @staticmethod
-    def get_api_key() -> str:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            try:
-                with open(API_KEY_FILE, 'r') as f:
-                    api_key = f.read().strip()
-            except FileNotFoundError:
-                raise SystemExit(f"エラー: GEMINI_API_KEY環境変数が設定されておらず、{API_KEY_FILE}ファイルも見つかりません。")
-        if not api_key:
-            raise SystemExit("エラー: API キーが見つかりません。")
-        return api_key
+        self.api_key = APIKeyManager.get_api_key()
+        GeminiHandler.initialize(self.api_key)
 
     def load_content(self, url_or_file: str) -> str:
         if url_or_file.startswith("http"):
@@ -214,7 +227,7 @@ def main():
             {"url_or_file": "https://www.yahoo.co.jp/"},
             {"url_or_file": "https://github.com/aegisfleet/voicevox2video"},
             {"url_or_file": "https://youtu.be/oWGPJ7PHB8w"},
-            {"url_or_file": "https://www.amazon.co.jp/dp/B00NTCH52W"},
+            {"url_or_file": "https://www.amazon.co.jp/dp/B00NTCH52W/"},
         ]
 
         for i, case in enumerate(test_cases):
