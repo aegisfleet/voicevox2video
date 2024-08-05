@@ -134,7 +134,8 @@ class ScenarioGenerator:
         self.dialogue_generator = DialogueGenerator(self.api_key)
 
     def generate_scenario(self, url_or_file: str, char1: str, char2: str, mode: int) -> List[Tuple[str, str]]:
-        content = ContentLoader.load_content(url_or_file)
+        content_loader = ContentLoader()
+        content = content_loader.load_content(url_or_file)
 
         dialogue = self.dialogue_generator.generate_dialogue(content, char1, char2, mode)
 

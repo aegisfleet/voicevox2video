@@ -1,35 +1,62 @@
+import chardet
+import google.generativeai as genai
+import os
+import re
 import requests
+import sys
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import YoutubeLoader
 from urllib.parse import urlparse
 from PyPDF2 import PdfReader
-import re
-import chardet
-import sys
+
+API_KEY_FILE = '.gemini_api_key'
+
+class APIKeyManager:
+    @staticmethod
+    def get_api_key() -> str:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            try:
+                with open(API_KEY_FILE, 'r') as f:
+                    api_key = f.read().strip()
+            except FileNotFoundError:
+                raise SystemExit(f"エラー: GEMINI_API_KEY環境変数が設定されておらず、{API_KEY_FILE}ファイルも見つかりません。")
+        if not api_key:
+            raise SystemExit("エラー: API キーが見つかりません。")
+        return api_key
 
 class WebScraper:
-    @staticmethod
-    def scrape_website(url: str) -> str:
+    @classmethod
+    def initialize(cls, api_key: str):
+        genai.configure(api_key=api_key)
+        cls.model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+
+    @classmethod
+    def scrape_website(cls, url: str) -> str:
+        if not hasattr(cls, 'model'):
+            raise RuntimeError("WebScraper が初期化されていません。まず WebScraper.initialize(api_key) を呼び出してください。")
+
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
+        text_content = soup.get_text(separator=' ', strip=True)
+        print(text_content[:10000])
 
-        unwanted_phrases = [
-            "Qiita Engineer Festa 2024",
-            "Trend",
-            "Question",
-            "Official Event",
-            "Official Column",
-            "signpostCareer",
-            "Organization",
-            "Go to list of users who liked"
-        ]
+        prompt = f"""
+以下のテキストはWebページの生のコンテンツです。
+主要なコンテンツを抽出してください。
+主要な情報に重点を置き、ナビゲーションメニュー、広告、フッター情報などの無関係な部分は削除してください。
+元の構造と重要な詳細を維持してください。
 
-        for phrase in unwanted_phrases:
-            for text_node in soup.find_all(string=lambda text: phrase in text):
-                text_node.replace_with(text_node.replace(phrase, ""))
+Webページのコンテンツ:
+{text_content[:10000]}
+        """
 
-        main_content = [tag.get_text(strip=True) for tag in soup.find_all(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li']) if tag.get_text(strip=True)]
-        return "\n".join(main_content)
+        response = cls.model.generate_content(prompt)
+        
+        if response.text:
+            return response.text.strip()
+        else:
+            return "コンテンツの抽出に失敗しました。"
 
     @staticmethod
     def extract_github_readme(url: str) -> str:
@@ -126,8 +153,24 @@ class PDFHandler:
         return text
 
 class ContentLoader:
+    def __init__(self):
+        self.api_key = self.get_api_key()
+        WebScraper.initialize(self.api_key)
+
     @staticmethod
-    def load_content(url_or_file: str) -> str:
+    def get_api_key() -> str:
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            try:
+                with open(API_KEY_FILE, 'r') as f:
+                    api_key = f.read().strip()
+            except FileNotFoundError:
+                raise SystemExit(f"エラー: GEMINI_API_KEY環境変数が設定されておらず、{API_KEY_FILE}ファイルも見つかりません。")
+        if not api_key:
+            raise SystemExit("エラー: API キーが見つかりません。")
+        return api_key
+
+    def load_content(self, url_or_file: str) -> str:
         if url_or_file.startswith("http"):
             print(f"Scraping content from: {url_or_file}")
             if YouTubeHandler.is_youtube_url(url_or_file):
@@ -140,7 +183,7 @@ class ContentLoader:
                 return WebScraper.scrape_website(url_or_file)
         else:
             print(f"Loading content from file: {url_or_file}")
-            return ContentLoader.read_file_with_encoding(url_or_file)
+            return self.read_file_with_encoding(url_or_file)
 
     @staticmethod
     def read_file_with_encoding(file_path: str) -> str:
@@ -157,9 +200,11 @@ class ContentLoader:
             return raw_data.decode('utf-8')
 
 def main():
+    content_loader = ContentLoader()
+
     if len(sys.argv) > 1:
         url_or_file = sys.argv[1]
-        content = ContentLoader.load_content(url_or_file)
+        content = content_loader.load_content(url_or_file)
         print(f"Content:\n{content}")
     else:
         test_cases = [
@@ -173,7 +218,7 @@ def main():
         ]
 
         for i, case in enumerate(test_cases):
-            content = ContentLoader.load_content(case['url_or_file'])
+            content = content_loader.load_content(case['url_or_file'])
             print(f"Content {i}: {content}")
 
 if __name__ == "__main__":
