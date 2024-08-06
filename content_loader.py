@@ -1,5 +1,4 @@
 import chardet
-import google.generativeai as genai
 import os
 import re
 import requests
@@ -8,37 +7,10 @@ from bs4 import BeautifulSoup
 from langchain_community.document_loaders import YoutubeLoader
 from urllib.parse import urlparse
 from PyPDF2 import PdfReader
+from utils import APIKeyManager, GeminiHandler
 
-API_KEY_FILE = '.gemini_api_key'
-
-class APIKeyManager:
-    @staticmethod
-    def get_api_key() -> str:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            try:
-                with open(API_KEY_FILE, 'r') as f:
-                    api_key = f.read().strip()
-            except FileNotFoundError:
-                raise SystemExit(f"エラー: GEMINI_API_KEY環境変数が設定されておらず、{API_KEY_FILE}ファイルも見つかりません。")
-        if not api_key:
-            raise SystemExit("エラー: API キーが見つかりません。")
-        return api_key
-
-class GeminiHandler:
-    model = None
-
-    @classmethod
-    def initialize(cls, api_key: str):
-        genai.configure(api_key=api_key)
-        cls.model = genai.GenerativeModel(model_name="gemini-1.5-flash")
-
-    @classmethod
-    def generate_content(cls, prompt: str) -> str:
-        if not cls.model:
-            raise RuntimeError("GeminiHandler が初期化されていません。まず GeminiHandler.initialize(api_key) を呼び出してください。")
-        response = cls.model.generate_content(prompt)
-        return response.text.strip() if response.text else "コンテンツの生成に失敗しました。"
+OUTPUT_DIR = 'output'
+CONTENT_OUTPUT_FILE = 'retrieved_content.txt'
 
 class WebScraper:
     @classmethod
@@ -187,22 +159,25 @@ class ContentLoader:
         if url_or_file.startswith("http"):
             print(f"Scraping content from: {url_or_file}")
             if YouTubeHandler.is_youtube_url(url_or_file):
-                return YouTubeHandler.get_youtube_content(url_or_file)
+                content = YouTubeHandler.get_youtube_content(url_or_file)
             elif re.match(r'https?://(?:www\.)?github\.com/[\w-]+/[\w.-]+', url_or_file):
-                return WebScraper.extract_github_readme(url_or_file)
+                content = WebScraper.extract_github_readme(url_or_file)
             elif WebScraper.is_amazon_url(url_or_file):
-                return WebScraper.scrape_amazon_product(url_or_file)
+                content = WebScraper.scrape_amazon_product(url_or_file)
             else:
-                return WebScraper.scrape_website(url_or_file)
+                content = WebScraper.scrape_website(url_or_file)
         else:
             print(f"Loading content from file: {url_or_file}")
-            return self.read_file_with_encoding(url_or_file)
+            content = self.read_file_with_encoding(url_or_file)
+
+        self.save_content(content)
+        return content
 
     @staticmethod
     def read_file_with_encoding(file_path: str) -> str:
         if file_path.lower().endswith('.pdf'):
             return PDFHandler.extract_text_from_pdf(file_path)
-        
+
         with open(file_path, 'rb') as f:
             raw_data = f.read()
         encoding = chardet.detect(raw_data)['encoding']
@@ -211,6 +186,14 @@ class ContentLoader:
         except UnicodeDecodeError:
             print(f"警告: {encoding}でのデコードに失敗しました。UTF-8で再試行します。")
             return raw_data.decode('utf-8')
+
+    @staticmethod
+    def save_content(content: str) -> None:
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        content_file = os.path.join(OUTPUT_DIR, CONTENT_OUTPUT_FILE)
+        with open(content_file, 'w', encoding='utf-8') as f:
+            f.write(content)
+        print(f"\n取得したコンテンツが保存されました: {content_file}")
 
 def main():
     content_loader = ContentLoader()

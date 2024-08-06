@@ -1,14 +1,13 @@
 import os
 import json
-import google.generativeai as genai
 import argparse
 import random
 from content_loader import ContentLoader
 from typing import List, Tuple
+from utils import APIKeyManager, GeminiHandler
 
 CONFIG_DIR = 'config'
 OUTPUT_DIR = 'output'
-API_KEY_FILE = '.gemini_api_key'
 DIALOGUE_OUTPUT_FILE = 'generated_dialogue.txt'
 
 def load_json_config(filename: str) -> dict:
@@ -26,24 +25,9 @@ spelling_corrections = {
     "なのだな？": "なのだ？",
 }
 
-class APIKeyManager:
-    @staticmethod
-    def get_api_key() -> str:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            try:
-                with open(API_KEY_FILE, 'r') as f:
-                    api_key = f.read().strip()
-            except FileNotFoundError:
-                raise SystemExit(f"エラー: GEMINI_API_KEY環境変数が設定されておらず、{API_KEY_FILE}ファイルも見つかりません。")
-        if not api_key:
-            raise SystemExit("エラー: API キーが見つかりません。")
-        return api_key
-
 class DialogueGenerator:
     def __init__(self, api_key: str):
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+        GeminiHandler.initialize(api_key)
 
     @staticmethod
     def get_character_interaction(char1: str, char2: str) -> Tuple[str, str]:
@@ -105,9 +89,9 @@ class DialogueGenerator:
 
         for retry in range(3):
             try:
-                response = self.model.start_chat().send_message(prompt)
+                response = GeminiHandler.generate_content(prompt)
                 dialogue = []
-                for line in response.text.strip().split('\n'):
+                for line in response.strip().split('\n'):
                     if ':' in line:
                         speaker, text = line.split(':', 1)
                         speaker = speaker.replace("## タイトル", "タイトル").replace("##  タイトル", "タイトル")
