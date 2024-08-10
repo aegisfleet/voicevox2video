@@ -23,19 +23,14 @@ initialize_output_file() {
   : > "$output_file"
 }
 
-append_find_output() {
-  echo "## Find Output" | tee -a "$output_file"
-  find . -type f -not -path '*/.git/*' -exec ls -lh {} \; | tee -a "$output_file"
-}
-
 append_source_code() {
   local find_output
-  find_output=$(find . -type f -not -path '*/.git/*')
+  find_output=$(git ls-files -co --exclude-standard | sort)
 
   echo "## Source Code" | tee -a "$output_file"
 
   while IFS= read -r line; do
-    if [[ "$line" != "./$output_file" ]] && [[ "$line" != "./$0" ]] && ! is_binary_file "$line"; then
+    if [[ "$line" != "$output_file" ]] && [[ "$line" != "$0" ]] && ! is_binary_file "$line"; then
       local file_size
       file_size=$(stat -c%s "$line")
       if (( file_size <= 20480 )); then
@@ -49,10 +44,10 @@ append_source_code() {
       else
         echo "Ignored (file too large): $line"
       fi
-    elif [[ "$line" == "./$0" ]]; then
+    elif [[ "$line" == "$0" ]]; then
       echo "Ignored (this script): $line"
     else
-      if [[ "$line" == "./$output_file" ]]; then
+      if [[ "$line" == "$output_file" ]]; then
         echo "Ignored (output file): $line"
       else
         echo "Ignored (binary file): $line"
@@ -61,18 +56,9 @@ append_source_code() {
   done <<< "$find_output"
 }
 
-append_output_file_size() {
-  local output_file_size
-  output_file_size=$(stat -c%s "$output_file")
-  echo "## Output File Size" | tee -a "$output_file"
-  echo "Output file size: $output_file_size bytes" | tee -a "$output_file"
-}
-
 main() {
   initialize_output_file
-  append_find_output
   append_source_code
-  append_output_file_size
 }
 
 main "$@"
