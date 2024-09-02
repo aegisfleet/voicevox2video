@@ -23,7 +23,7 @@ class GeminiHandler:
     def initialize(cls, api_key: str):
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        cls.model = genai.GenerativeModel(model_name="gemini-1.5-flash")
+        cls.model = genai.GenerativeModel(model_name="gemini-1.5-flash-exp-0827")
 
     @classmethod
     def generate_content(cls, prompt: str) -> str:
