@@ -173,6 +173,9 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("-m", "--mode", type=int, choices=[1, 2, 3, 4], default=1, help="対話モード (デフォルト: 1)")
     parser.add_argument("-v", "--vertical", action="store_true", help="縦型動画を生成")
     parser.add_argument("-b", "--bgm", help="BGMファイルのパス")
+    parser.add_argument("-un", "--username", help="Blueskyのハンドル名")
+    parser.add_argument("-pw", "--password", help="Blueskyのパスワード")
+    parser.add_argument("-url", "--reply_to_url", help="Blueskyの返信先URL")
     return parser.parse_args()
 
 def main() -> None:
@@ -229,6 +232,14 @@ def main() -> None:
         bgm_file.unlink()
 
     print(f"対話動画が完成しました: {FINAL_OUTPUT}")
+
+    if args.username and args.password:
+        from bluesky_utils import post
+        text = f" {title}\n\n対話: {args.char1} x {args.char2}\n"
+        if args.reply_to_url:
+            post(args.username, args.password, text, args.reply_to_url)
+        else:
+            post(args.username, args.password, text)
 
 if __name__ == "__main__":
     main()

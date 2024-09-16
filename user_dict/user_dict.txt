@@ -6,10 +6,12 @@ anthropic,アンスロピック,0
 Bazel,バゼル,0
 Boost,ブースト,0
 Buck2,バックツー,0
+Build,ビルド,0
 Claude,クロード,0
 Cloud,クラウド,0
 Cloud9,クラウドナイン,0
 Code,コード,0
+Connect,コネクト,0
 CrowdStrike,クラウドストライク,0
 Docker,ドッカー,0
 DrawDB,ドローデービー,0
@@ -25,9 +27,12 @@ GitHub,ギットハブ,0
 GPT,ジーピーティー,0
 HEPA,ヘパ,0
 Immich,イミッヒ,0
+JSON,ジェーソン,0
 K8s,ケイハチエス,0
+Lambda,ラムダ,0
 Linkspector,リンクスペクター,0
 Llama,ラマ,0
+LocalStack,ローカルスタック,0
 Markdown,マークダウン,0
 Marp,マープ,0
 mem0,メモ,0
@@ -39,8 +44,11 @@ NativeLink,ネイティブリンク,0
 Node.js,ノードジェーエス,0
 Omni,オムニ,0
 OpenAI,オープンエーアイ,0
+OpenID,オープンアイディー,0
 pytest,パイテスト,0
 Python,パイソン,0
+Run,ラン,0
+S3,エススリー,0
 Secretlint,シークレットリント,0
 Security,セキュリティ,0
 Shell,シェル,0
@@ -57,5 +65,7 @@ voicevox,ボイスボックス,0
 VSCode,ブイエスコード,0
 WEB,ウェブ,0
 Win11Debloat,ウィンイレブンデブロート,0
+yaml,ヤムル,0
+YAML,ヤムル,0
 YouTube,ユーチューブ,0
 美味しい,オイシイ,0
