@@ -1,6 +1,9 @@
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
-from moviepy.editor import ColorClip, ImageClip, CompositeVideoClip, vfx
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy.video.VideoClip import ColorClip
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
+from moviepy import vfx
 import os
 import json
 import unicodedata
@@ -53,19 +56,19 @@ EMOJI_EMOTION_MAP = {
 
 def apply_emotion_effect(clip, emotion):
     effects = {
-        "happy": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.1).fx(vfx.rotate, lambda t: np.sin(t * 2)),
-        "sad": lambda c: c.fx(vfx.colorx, 0.9),
-        "angry": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.lum_contrast, 0, 0, 2.0).fx(vfx.gamma_corr, 0.8),
-        "surprised": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.lum_contrast, 0, 0, 1.5),
-        "embarrassed": lambda c: c.fx(vfx.colorx, 0.8).fx(vfx.gamma_corr, 0.8),
-        "love": lambda c: c.fx(vfx.colorx, 1.1).fx(vfx.gamma_corr, 1.2).fx(vfx.rotate, lambda t: np.sin(t * 8)),
-        "tired": lambda c: c.fx(vfx.colorx, 0.5).fx(vfx.lum_contrast, 0, 0, 0.5),
-        "thinking": lambda c: c.fx(vfx.lum_contrast, 0, 0, 2.0),
+        "happy": lambda c: c.fx(editor.vfx.colorx, 1.1).fx(editor.vfx.gamma_corr, 1.1).fx(editor.vfx.rotate, lambda t: np.sin(t * 2)),
+        "sad": lambda c: c.fx(editor.vfx.colorx, 0.9),
+        "angry": lambda c: c.fx(editor.vfx.colorx, 1.2).fx(editor.vfx.lum_contrast, 0, 0, 2.0).fx(editor.vfx.gamma_corr, 0.8),
+        "surprised": lambda c: c.fx(editor.vfx.colorx, 1.1).fx(editor.vfx.lum_contrast, 0, 0, 1.5),
+        "embarrassed": lambda c: c.fx(editor.vfx.colorx, 0.8).fx(editor.vfx.gamma_corr, 0.8),
+        "love": lambda c: c.fx(editor.vfx.colorx, 1.1).fx(editor.vfx.gamma_corr, 1.2).fx(editor.vfx.rotate, lambda t: np.sin(t * 8)),
+        "tired": lambda c: c.fx(editor.vfx.colorx, 0.5).fx(editor.vfx.lum_contrast, 0, 0, 0.5),
+        "thinking": lambda c: c.fx(editor.vfx.lum_contrast, 0, 0, 2.0),
         "neutral": lambda c: c,
-        "confused": lambda c: c.fx(vfx.colorx, 0.95).fx(vfx.lum_contrast, 0, 0, 1.0).fx(vfx.rotate, lambda t: 2 * np.sin(t * 8)),
-        "worried": lambda c: c.fx(vfx.colorx, 0.6).fx(vfx.lum_contrast, 0, 0, 0.5),
-        "unimpressed": lambda c: c.fx(vfx.colorx, 0.9).fx(vfx.lum_contrast, -0.3, 0, 0.8),
-        "smug": lambda c: c.fx(vfx.colorx, 1.2).fx(vfx.gamma_corr, 1.1),
+        "confused": lambda c: c.fx(editor.vfx.colorx, 0.95).fx(editor.vfx.lum_contrast, 0, 0, 1.0).fx(editor.vfx.rotate, lambda t: 2 * np.sin(t * 8)),
+        "worried": lambda c: c.fx(editor.vfx.colorx, 0.6).fx(editor.vfx.lum_contrast, 0, 0, 0.5),
+        "unimpressed": lambda c: c.fx(editor.vfx.colorx, 0.9).fx(editor.vfx.lum_contrast, -0.3, 0, 0.8),
+        "smug": lambda c: c.fx(editor.vfx.colorx, 1.2).fx(editor.vfx.gamma_corr, 1.1),
     }
     return effects.get(emotion, lambda c: c)(clip)
 
@@ -183,7 +186,7 @@ def create_title_image(title, font_path, font_size, size):
     return np.array(img)
 
 def add_animation(clip, animation_type, is_vertical=False):
-    clip = clip.fx(vfx.fadeout, ANIMATION_DURATION).fx(vfx.fadein, ANIMATION_DURATION)
+    clip = clip.fx(editor.vfx.fadeout, ANIMATION_DURATION).fx(editor.vfx.fadein, ANIMATION_DURATION)
     if animation_type == "fade":
         return clip
 
@@ -210,7 +213,7 @@ def create_video_with_subtitles(subtitle_text, character, duration=5, output_fil
     emotions = analyze_emotions(subtitle_text)
     print(f"感情: {emotions}")
 
-    background = ColorClip(size=size, color=(0, 0, 0)).set_duration(duration)
+    background = ColorClip(size=size, color=(0, 0, 0)).with_duration(duration)
     text_img = create_text_image(clean_subtitle_text, character, FONT_SIZE, font_path, size, emotions, is_vertical)
     text_clip = ImageClip(text_img).set_duration(duration)
     animated_text_clip = add_animation(text_clip, animation_type, is_vertical)
@@ -222,10 +225,10 @@ def create_video_with_subtitles(subtitle_text, character, duration=5, output_fil
 
     if clean_title:
         title_img = create_title_image(clean_title, font_path, FONT_SIZE, size)
-        title_clip = ImageClip(title_img).set_duration(duration)
+        title_clip = editor.ImageClip(title_img).set_duration(duration)
         clips.append(title_clip)
 
-    final_clip = CompositeVideoClip(clips)
+    final_clip = editor.CompositeVideoClip(clips)
     final_clip.write_videofile(output_file, fps=24)
 
     print(f"テロップ付き動画が生成されました: {output_file}")
